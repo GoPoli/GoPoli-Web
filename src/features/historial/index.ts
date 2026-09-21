@@ -1,0 +1,1 @@
+export { HistorialViajesView } from "./HistorialViajesView";

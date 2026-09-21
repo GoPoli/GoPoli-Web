@@ -1,0 +1,13 @@
+# Dependencias opcionales para el módulo viajes/mapa (NO ejecutar npm install desde este agente).
+# La implementación actual carga Google Maps JS por script + DirectionsService,
+# sin paquetes npm adicionales. Si el equipo prefiere un wrapper React:
+
+@vis.gl/react-google-maps
+# alternativa: @react-google-maps/api
+
+# Tipados opcionales si se abandona google-maps.d.ts local:
+@types/google.maps
+
+# Variables de entorno públicas requeridas:
+# NEXT_PUBLIC_API_URL
+# NEXT_PUBLIC_GOOGLE_MAPS_API_KEY

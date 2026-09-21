@@ -1,0 +1,6 @@
+# Dependencias adicionales (perfil / conductor / historial / PWA)
+
+Ninguna. Este módulo usa solo `next`, `react`, `react-dom` y el cliente HTTP
+basado en `fetch` + `getAccessToken` de `@/features/auth/session`.
+
+No ejecutar `npm install` por este archivo.
