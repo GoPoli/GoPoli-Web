@@ -21,6 +21,7 @@ import {
   type HistorialViaje,
   type UsuarioPerfil,
 } from "./types";
+import { buildProfilePayload } from "./payload";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
@@ -148,14 +149,11 @@ export async function actualizarPerfil(input: {
   nombre: string;
   tel: string;
   correo: string;
+  idCarrera: number;
 }): Promise<UsuarioPerfil> {
   const text = await usuarioRequest("/usuario/me", {
     method: "PUT",
-    body: {
-      nombre: input.nombre.trim(),
-      tel: input.tel.trim(),
-      correo: input.correo.trim(),
-    },
+    body: buildProfilePayload(input),
   });
   const u = parseUsuarioPerfil(parseJsonBody(text));
   syncSessionUsuario(u);

@@ -171,13 +171,16 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--gopoli-border,#E0E0E0)] px-4 py-3 md:px-6">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--gopoli-mist)] px-4 py-3 md:px-6">
         <div>
-          <h1 className="text-lg font-bold text-[var(--gopoli-primary,#1B5E20)]">
+          <h1 className="text-lg font-semibold text-[var(--gopoli-pine)]">
             Mi grupo
           </h1>
-          <p className="text-xs text-[var(--gopoli-text-muted,#757575)]">
+          <p className="text-xs text-[var(--gopoli-text-muted)]">
             Servicio #{idServicio}
+            {estadoServicio === ESTADO_SERVICIO_EN_CURSO
+              ? " · En viaje"
+              : " · Activo"}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -200,7 +203,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
 
       {mensajeToast ? (
         <div
-          className="mx-4 mt-3 rounded-[10px] bg-[#E8F5E9] px-3 py-2 text-sm text-[var(--gopoli-primary,#1B5E20)] md:mx-6"
+          className="mx-4 mt-3 rounded-xl bg-[var(--gopoli-mist)] px-3 py-2 text-sm text-[var(--gopoli-pine)] md:mx-6"
           role="status"
         >
           {mensajeToast}
@@ -242,23 +245,23 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
                     <li
                       key={m.idUsuario}
                       className={[
-                        "rounded-xl border px-4 py-3",
+                        "rounded-2xl border px-4 py-3",
                         soyYo
-                          ? "border-[color-mix(in_srgb,var(--gopoli-primary,#1B5E20)_35%,transparent)] bg-[#E8F5E9]"
-                          : "border-[#EEEEEE] bg-[#FAFAFA]",
+                          ? "border-[color-mix(in_srgb,var(--gopoli-primary)_30%,transparent)] bg-[var(--gopoli-mist)]"
+                          : "border-[var(--gopoli-mist)] bg-white",
                       ].join(" ")}
                     >
                       <div className="flex items-center gap-3">
                         <span
                           className={[
-                            "flex size-10 items-center justify-center rounded-full",
+                            "flex size-11 items-center justify-center rounded-full text-sm font-semibold",
                             esCreadorMiembro
-                              ? "bg-[var(--gopoli-primary,#1B5E20)] text-white"
-                              : "bg-[#E0E0E0] text-[var(--gopoli-text-muted,#757575)]",
+                              ? "bg-[var(--gopoli-pine)] text-white"
+                              : "bg-[var(--gopoli-mist)] text-[var(--gopoli-text-muted)]",
                           ].join(" ")}
                           aria-hidden
                         >
-                          👤
+                          {(m.nombreUsuario ?? "?").slice(0, 1).toUpperCase()}
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -266,7 +269,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
                               {m.nombreUsuario ?? "Usuario"}
                             </p>
                             {soyYo ? (
-                              <span className="rounded-lg bg-[var(--gopoli-primary,#1B5E20)] px-2 py-0.5 text-[11px] font-semibold text-white">
+                              <span className="rounded-md bg-[var(--gopoli-signal)] px-2 py-0.5 text-[11px] font-semibold text-[var(--gopoli-accent)]">
                                 Tú
                               </span>
                             ) : null}
@@ -275,8 +278,8 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
                             className={[
                               "text-xs",
                               esCreadorMiembro
-                                ? "text-[var(--gopoli-primary,#1B5E20)]"
-                                : "text-[var(--gopoli-text-muted,#757575)]",
+                                ? "text-[var(--gopoli-secondary)]"
+                                : "text-[var(--gopoli-text-muted)]",
                             ].join(" ")}
                           >
                             {etiquetaMiembro(m, esCreadorMiembro)}
@@ -290,7 +293,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
             )}
           </div>
 
-          <div className="border-t border-[var(--gopoli-border,#E0E0E0)] p-4 md:p-6">
+          <div className="border-t border-[var(--gopoli-mist)] p-4 md:p-6">
             {esCreador ? (
               <div className="flex flex-col gap-3">
                 <Button
@@ -313,7 +316,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
                     fullWidth
                     size="lg"
                     variant="outline"
-                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    className="border-red-700 text-red-700 hover:bg-red-50"
                     onClick={() => setConfirm("cancelar")}
                   >
                     Cancelar grupo
@@ -326,7 +329,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
                 fullWidth
                 size="lg"
                 variant="outline"
-                className="border-red-600 text-red-600 hover:bg-red-50"
+                className="border-red-700 text-red-700 hover:bg-red-50"
                 onClick={() => setConfirm("salir")}
               >
                 Salir del grupo

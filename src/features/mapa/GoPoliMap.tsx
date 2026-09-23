@@ -7,7 +7,12 @@ import { EmptyState } from "@/components/ui";
 import type { LatLngLiteral, MapMarker } from "./types";
 
 const CENTRO_MEDELLIN: LatLngLiteral = { lat: 6.2476, lng: -75.5658 };
-const VERDE_PRIMARIO = "#1B5E20";
+
+function markerFill(color: MapMarker["color"]): string {
+  if (color === "green") return "#2F6B45";
+  if (color === "amber") return "#E6A317";
+  return "#8A5A00";
+}
 
 type LeafletNs = typeof import("leaflet");
 
@@ -55,8 +60,9 @@ export function GoPoliMap({
         const map = L.map(containerRef.current, {
           center: [CENTRO_MEDELLIN.lat, CENTRO_MEDELLIN.lng],
           zoom: 12,
-          zoomControl: true,
+          zoomControl: false,
         });
+        L.control.zoom({ position: "bottomright" }).addTo(map);
         const tiles = L.tileLayer(
           "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
           {
@@ -102,10 +108,10 @@ export function GoPoliMap({
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = markers.map((m) =>
       L.circleMarker([m.position.lat, m.position.lng], {
-        radius: 10,
+        radius: m.color === "amber" ? 11 : 9,
         color: "#ffffff",
         weight: 2,
-        fillColor: m.color === "green" ? "#2E7D32" : "#C62828",
+        fillColor: markerFill(m.color),
         fillOpacity: 1,
       })
         .bindTooltip(m.title)
@@ -119,7 +125,7 @@ export function GoPoliMap({
     if (routePath.length >= 2) {
       polylineRef.current = L.polyline(
         routePath.map((p) => [p.lat, p.lng]),
-        { color: VERDE_PRIMARIO, weight: 5, opacity: 1 },
+        { color: "#2F6B45", weight: 5, opacity: 0.92 },
       ).addTo(map);
     }
 
@@ -142,7 +148,7 @@ export function GoPoliMap({
     return (
       <div
         className={[
-          "flex h-full min-h-[240px] items-center justify-center bg-[#F5F5F5]",
+          "flex h-full min-h-[240px] items-center justify-center bg-[var(--gopoli-mist,#E7F2EA)]",
           className,
         ].join(" ")}
       >

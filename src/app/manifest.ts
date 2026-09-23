@@ -9,11 +9,16 @@ export default function manifest(): MetadataRoute.Manifest {
       "Viaje compartido entre estudiantes del Politécnico (@elpoli.edu.co).",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#1B5E20",
-    orientation: "portrait-primary",
+    background_color: "#143528",
+    theme_color: "#143528",
+    orientation: "any",
     lang: "es",
     icons: [
+      {
+        src: "/favicon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+      },
       {
         src: "/icons/Icon-192.png",
         sizes: "192x192",

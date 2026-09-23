@@ -57,7 +57,7 @@ export function Button({
       type={type}
       disabled={isDisabled}
       className={[
-        "inline-flex items-center justify-center gap-2 font-semibold transition-colors",
+        "inline-flex min-h-11 items-center justify-center gap-2 font-semibold transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)] focus-visible:ring-offset-2",
         "disabled:cursor-not-allowed",
         variantClass[variant],

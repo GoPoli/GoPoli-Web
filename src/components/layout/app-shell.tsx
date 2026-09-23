@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode } from "react";
+import { GoPoliBrand } from "@/components/brand/GoPoliLogo";
 import {
   IconAgenda,
   IconChat,
@@ -91,27 +92,26 @@ export function AppShell({
   return (
     <div
       className={[
-        "flex bg-[var(--background,#ffffff)] text-[var(--foreground,#171717)]",
+        "flex bg-[var(--gopoli-paper,#F7FBF8)] text-[var(--foreground,#122018)]",
         esMapa ? "h-dvh overflow-hidden" : "min-h-dvh",
       ].join(" ")}
     >
-      {/* Desktop sidebar */}
       <aside
-        className="hidden w-60 shrink-0 flex-col border-r border-[var(--gopoli-border,#E0E0E0)] bg-white md:flex"
+        className="hidden w-56 shrink-0 flex-col border-r border-[var(--gopoli-border,#C9D7CC)] bg-white md:flex"
         aria-label="Navegación principal"
       >
-        <div className="border-b border-[var(--gopoli-border,#E0E0E0)] px-5 py-5">
+        <div className="border-b border-[var(--gopoli-mist,#E7F2EA)] px-4 py-5">
           <Link
             href="/mapa"
-            className="text-xl font-bold tracking-tight text-[var(--gopoli-primary,#1B5E20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)] focus-visible:ring-offset-2 rounded"
+            className="inline-flex rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)] focus-visible:ring-offset-2"
           >
-            GoPoli
+            <GoPoliBrand markClassName="size-8" wordmarkClassName="text-2xl" />
           </Link>
-          <p className="mt-1 text-xs text-[var(--gopoli-text-muted,#757575)]">
-            Viaje compartido
+          <p className="mt-2 text-xs leading-relaxed text-[var(--gopoli-text-muted)]">
+            Cupo compartido en el Poli
           </p>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
+        <nav className="flex flex-1 flex-col gap-0.5 p-2.5">
           {APP_SHELL_NAV.map((item) => {
             const active = navIsActive(pathname, item.href);
             const Icon = item.icon;
@@ -121,11 +121,11 @@ export function AppShell({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={[
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)] focus-visible:ring-offset-2",
+                  "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ease-out",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)] focus-visible:ring-offset-2",
                   active
-                    ? "bg-[var(--gopoli-primary,#1B5E20)]/10 text-[var(--gopoli-primary,#1B5E20)]"
-                    : "text-[var(--gopoli-text-muted,#757575)] hover:bg-black/5 hover:text-[var(--gopoli-primary,#1B5E20)]",
+                    ? "bg-[var(--gopoli-pine)] text-white"
+                    : "text-[var(--gopoli-text-muted)] hover:bg-[var(--gopoli-mist)] hover:text-[var(--gopoli-pine)]",
                 ].join(" ")}
               >
                 <Icon className="size-5 shrink-0" />
@@ -134,11 +134,11 @@ export function AppShell({
             );
           })}
         </nav>
-        <div className="border-t border-[var(--gopoli-border,#E0E0E0)] p-3">
+        <div className="border-t border-[var(--gopoli-mist)] p-2.5">
           {isAuthenticated ? (
             <Link
               href="/perfil"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--gopoli-text-muted,#757575)] hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)] focus-visible:ring-offset-2"
+              className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--gopoli-text-muted)] hover:bg-[var(--gopoli-mist)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)] focus-visible:ring-offset-2"
             >
               <IconPerson className="size-5" />
               Mi cuenta
@@ -146,7 +146,7 @@ export function AppShell({
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--gopoli-primary,#1B5E20)] hover:bg-[var(--gopoli-primary,#1B5E20)]/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)] focus-visible:ring-offset-2"
+              className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--gopoli-primary)] hover:bg-[var(--gopoli-mist)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)] focus-visible:ring-offset-2"
             >
               <IconLogin className="size-5" />
               Iniciar sesión
@@ -161,23 +161,43 @@ export function AppShell({
           esMapa ? "h-full min-h-0" : "",
         ].join(" ")}
       >
-        {/* Top bar (AppBar-style) */}
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 bg-[var(--gopoli-primary,#1B5E20)] px-4 text-white shadow-sm md:h-16 md:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+        <header
+          className={[
+            "sticky top-0 z-30 flex min-h-14 shrink-0 items-center justify-between gap-3 px-4 pt-[env(safe-area-inset-top)] text-white md:min-h-14 md:px-5",
+            esMapa
+              ? "bg-[var(--gopoli-pine)]/92 backdrop-blur-sm"
+              : "bg-[var(--gopoli-pine)]",
+          ].join(" ")}
+        >
+          <div className="flex min-w-0 items-center gap-2.5">
             <Link
               href="/mapa"
-              className="truncate text-lg font-bold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gopoli-primary,#1B5E20)] rounded md:hidden"
+              className="inline-flex items-center gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gopoli-pine)] md:hidden"
+              aria-label="GoPoli inicio"
             >
-              GoPoli
+              <GoPoliBrand
+                tone="inverse"
+                markClassName="size-7"
+                wordmarkClassName="text-lg"
+              />
             </Link>
-            <h1 className="truncate text-base font-semibold md:text-lg">
-              {title}
-            </h1>
+            {!esMapa ? (
+              <h1 className="truncate text-base font-semibold md:text-lg">
+                {title}
+              </h1>
+            ) : (
+              <h1 className="sr-only">{title}</h1>
+            )}
+            {esMapa ? (
+              <p className="hidden truncate text-sm text-white/80 md:block">
+                Mapa
+              </p>
+            ) : null}
           </div>
           {!isAuthenticated ? (
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-white/95 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gopoli-primary,#1B5E20)] md:hidden"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-white/95 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gopoli-pine)] md:hidden"
             >
               <IconLogin className="size-4" />
               <span>Entrar</span>
@@ -196,26 +216,25 @@ export function AppShell({
           {children}
         </main>
 
-        {/* Mobile bottom nav */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--gopoli-border,#E0E0E0)] bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
+          className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--gopoli-mist)] bg-[var(--gopoli-paper)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
           aria-label="Navegación principal"
         >
-          <ul className="flex overflow-x-auto">
+          <ul className="flex">
             {APP_SHELL_NAV.map((item) => {
               const active = navIsActive(pathname, item.href);
               const Icon = item.icon;
               return (
-                <li key={item.href} className="min-w-[4.5rem] flex-1">
+                <li key={item.href} className="min-w-0 flex-1">
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={[
-                      "flex flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-medium",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--gopoli-primary,#1B5E20)]",
+                      "flex min-h-12 w-full flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-xs font-medium leading-tight",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--gopoli-primary)]",
                       active
-                        ? "text-[var(--gopoli-primary,#1B5E20)]"
-                        : "text-[var(--gopoli-text-muted,#757575)]",
+                        ? "text-[var(--gopoli-pine)]"
+                        : "text-[var(--gopoli-text-muted)]",
                     ].join(" ")}
                   >
                     <Icon className="size-6" />

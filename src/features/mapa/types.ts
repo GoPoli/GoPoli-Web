@@ -4,6 +4,6 @@ export type MapMarker = {
   id: string;
   position: LatLngLiteral;
   title: string;
-  /** green | red — como Flutter BitmapDescriptor hues */
-  color: "green" | "red";
+  /** green = origen; amber = destino (señal); red = legado */
+  color: "green" | "amber" | "red";
 };

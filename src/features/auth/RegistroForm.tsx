@@ -8,6 +8,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { GoPoliBrand } from "@/components/brand/GoPoliLogo";
 import { Button, Modal, Spinner, TextField } from "@/components/ui";
 import { ApiException } from "@/services/api/client";
 import { useAuth } from "./auth-context";
@@ -188,17 +189,15 @@ export function RegistroForm() {
     <>
       <form
         onSubmit={onSubmit}
-        className="mx-auto flex w-full max-w-md flex-col px-7 py-6"
+        className="mx-auto flex w-full min-w-0 max-w-md flex-col px-5 py-6 sm:px-7"
         noValidate
       >
-        <h1
-          className="text-center text-4xl font-black tracking-tight text-[var(--gopoli-primary,#1B5E20)]"
-          style={{ letterSpacing: "-1px" }}
-        >
-          GoPoli
-        </h1>
-        <h2 className="mt-2 text-center text-xl font-bold text-[var(--gopoli-secondary,#2E7D32)]">
-          Registro de usuario
+        <div className="flex justify-center">
+          <GoPoliBrand markClassName="size-10" wordmarkClassName="text-4xl" />
+        </div>
+        <h1 className="sr-only">GoPoli</h1>
+        <h2 className="mt-2 text-center text-xl font-semibold text-[var(--gopoli-primary,#1B5E20)]">
+          Crea tu cuenta
         </h2>
         <p className="mt-2 text-center text-sm leading-relaxed text-[var(--gopoli-text-muted,#757575)]">
           Completa tus datos con correo institucional @elpoli.edu.co

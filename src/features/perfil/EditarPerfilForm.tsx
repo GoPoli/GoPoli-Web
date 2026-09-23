@@ -13,6 +13,8 @@ import {
   mensajeNombre,
   mensajeTelefono,
 } from "@/features/auth/validations";
+import { useAuth } from "@/features/auth/auth-context";
+import type { Carrera } from "@/features/auth/types";
 import { getSessionUser } from "@/features/auth/session";
 import {
   actualizarPerfil,
@@ -43,10 +45,13 @@ function fileToBase64(file: File): Promise<string> {
 
 export function EditarPerfilForm() {
   const router = useRouter();
+  const { fetchCarreras } = useAuth();
   const [usuario, setUsuario] = useState<UsuarioPerfil | null>(null);
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [tel, setTel] = useState("");
+  const [carreraId, setCarreraId] = useState<number | "">("");
+  const [carreras, setCarreras] = useState<Carrera[]>([]);
   const [fotoBase64, setFotoBase64] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -60,17 +65,23 @@ export function EditarPerfilForm() {
     nombre?: string;
     correo?: string;
     tel?: string;
+    carrera?: string;
   }>({});
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setErrorCarga(null);
     try {
-      const u = await obtenerPerfil();
+      const [u, listaCarreras] = await Promise.all([
+        obtenerPerfil(),
+        fetchCarreras(),
+      ]);
+      setCarreras(listaCarreras);
       setUsuario(u);
       setNombre(u.nombre);
       setCorreo(u.correo);
       setTel(u.tel ?? "");
+      setCarreraId(u.idCarrera ?? "");
       setFotoBase64(u.fotoPerfil ?? null);
     } catch (e) {
       const fallback = getSessionUser();
@@ -78,6 +89,7 @@ export function EditarPerfilForm() {
         setNombre(fallback.nombre);
         setCorreo(fallback.correo);
         setTel(fallback.tel ?? "");
+        setCarreraId(fallback.idCarrera ?? "");
         setFotoBase64(fallback.fotoPerfil ?? null);
         setUsuario({
           ...fallback,
@@ -93,7 +105,7 @@ export function EditarPerfilForm() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [fetchCarreras]);
 
   useEffect(() => {
     void cargar();
@@ -140,13 +152,15 @@ export function EditarPerfilForm() {
       nombre: mensajeNombre(nombre) ?? undefined,
       correo: mensajeCorreo(correo) ?? undefined,
       tel: mensajeTelefono(tel) ?? undefined,
+      carrera: carreraId === "" ? "Selecciona tu carrera" : undefined,
     };
     setFieldErrors(errors);
-    if (errors.nombre || errors.correo || errors.tel) return;
+    if (errors.nombre || errors.correo || errors.tel || errors.carrera) return;
+    if (carreraId === "") return;
 
     setGuardando(true);
     try {
-      await actualizarPerfil({ nombre, correo, tel });
+      await actualizarPerfil({ nombre, correo, tel, idCarrera: carreraId });
       router.push("/perfil");
       router.refresh();
     } catch (err) {
@@ -265,6 +279,45 @@ export function EditarPerfilForm() {
         error={fieldErrors.tel}
         autoComplete="tel"
       />
+      <div>
+        <label
+          htmlFor="perfil-carrera"
+          className="mb-1.5 block text-sm font-medium text-[var(--gopoli-text-muted)]"
+        >
+          Carrera
+        </label>
+        <select
+          id="perfil-carrera"
+          value={carreraId}
+          disabled={guardando}
+          onChange={(e) =>
+            setCarreraId(
+              e.target.value === "" ? "" : Number.parseInt(e.target.value, 10),
+            )
+          }
+          aria-invalid={fieldErrors.carrera ? true : undefined}
+          aria-describedby={
+            fieldErrors.carrera ? "perfil-carrera-error" : undefined
+          }
+          className="min-h-12 w-full rounded-xl border border-[var(--gopoli-field-border)] bg-white px-4 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)]"
+        >
+          <option value="">Selecciona tu carrera</option>
+          {carreras.map((carrera) => (
+            <option key={carrera.idCarrera} value={carrera.idCarrera}>
+              {carrera.nombreCarrera}
+            </option>
+          ))}
+        </select>
+        {fieldErrors.carrera ? (
+          <p
+            id="perfil-carrera-error"
+            role="alert"
+            className="mt-1.5 text-sm text-red-700"
+          >
+            {fieldErrors.carrera}
+          </p>
+        ) : null}
+      </div>
 
       <Button type="submit" fullWidth size="lg" loading={guardando}>
         Guardar cambios

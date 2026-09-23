@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { GoPoliBrand } from "@/components/brand/GoPoliLogo";
 import { Button, TextField } from "@/components/ui";
 import { ApiException } from "@/services/api/client";
 import { useAuth } from "./auth-context";
@@ -72,18 +73,17 @@ export function LoginForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="mx-auto flex w-full max-w-md flex-col items-center px-7 py-8"
+      className="mx-auto flex w-full min-w-0 max-w-md flex-col items-stretch px-5 py-8 text-center sm:px-7"
       noValidate
     >
-      <h1
-        className="mt-6 text-[42px] font-black tracking-tight text-[var(--gopoli-primary,#1B5E20)]"
-        style={{ letterSpacing: "-1px" }}
-      >
-        GoPoli
-      </h1>
+      <div className="mt-4 flex justify-center">
+        <GoPoliBrand markClassName="size-10" wordmarkClassName="text-[2.4rem]" />
+      </div>
 
-      <h2 className="mt-6 text-[22px] font-bold text-[var(--gopoli-secondary,#2E7D32)]">
-        Inicio de sesión
+      <h1 className="sr-only">GoPoli</h1>
+
+      <h2 className="mt-6 text-[22px] font-semibold text-[var(--gopoli-pine)]">
+        Entra a tu cuenta
       </h2>
 
       <p className="mt-2 text-center text-sm leading-relaxed text-[var(--gopoli-text-muted,#757575)]">
@@ -157,43 +157,12 @@ export function LoginForm() {
         ¿No tienes una cuenta?{" "}
         <Link
           href="/registro"
-          className="font-semibold text-[var(--gopoli-accent,#FFC107)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)]"
+          className="font-semibold text-[var(--gopoli-primary,#1B5E20)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)]"
         >
           Crear una nueva cuenta
         </Link>
       </p>
 
-      <div className="mt-7 flex w-full items-center gap-3">
-        <div className="h-px flex-1 bg-[#E0E0E0]" />
-        <span className="text-[13px] text-[var(--gopoli-text-muted,#757575)]">
-          O
-        </span>
-        <div className="h-px flex-1 bg-[#E0E0E0]" />
-      </div>
-
-      <Button
-        type="button"
-        variant="primary"
-        size="lg"
-        fullWidth
-        className="mt-5"
-        disabled
-        aria-disabled
-        title="Google Sign-In no está implementado en el producto actual"
-      >
-        Continuar con Google
-      </Button>
-
-      <p className="mt-7 text-center text-xs leading-relaxed text-[var(--gopoli-text-muted,#757575)]">
-        Al hacer clic en continuar, aceptas nuestros{" "}
-        <span className="font-semibold text-[var(--gopoli-accent,#FFC107)]">
-          Términos de Servicio
-        </span>{" "}
-        y nuestra{" "}
-        <span className="font-semibold text-[var(--gopoli-accent,#FFC107)]">
-          Política de Privacidad
-        </span>
-      </p>
     </form>
   );
 }

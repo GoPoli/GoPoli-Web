@@ -27,6 +27,8 @@ export type CrearServicioFormProps = {
   bloqueoCrearMensaje?: string | null;
   /** Fija el botón de envío al pie del contenedor con scroll (hoja del mapa). */
   accionFija?: boolean;
+  /** Aviso UI cuando la query de destino no coincide con ubicaciones. */
+  onFiltroSinResultados?: (sinResultados: boolean) => void;
 };
 
 function latLngDe(u: Ubicacion | undefined): LatLng | null {
@@ -44,6 +46,7 @@ export function CrearServicioForm({
   onCoordenadasSeleccion,
   bloqueoCrearMensaje = null,
   accionFija = false,
+  onFiltroSinResultados,
 }: CrearServicioFormProps) {
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
   const [ubicacionSalida, setUbicacionSalida] = useState<number | "">("");
@@ -121,6 +124,21 @@ export function CrearServicioForm({
     );
   }, [destinoQuery, ubicaciones]);
 
+  useEffect(() => {
+    if (!onFiltroSinResultados) return;
+    const q = destinoQuery.trim();
+    if (!q || cargandoUbicaciones) {
+      onFiltroSinResultados(false);
+      return;
+    }
+    onFiltroSinResultados(filtradas.length === 0);
+  }, [
+    destinoQuery,
+    filtradas.length,
+    cargandoUbicaciones,
+    onFiltroSinResultados,
+  ]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (bloqueado) return;
@@ -175,10 +193,9 @@ export function CrearServicioForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
       {bloqueoCrearMensaje ? (
         <div
-          className="flex gap-2.5 rounded-[10px] border border-[#FFB74D] bg-[#FFF3E0] p-3 text-[13px] leading-snug text-[#BF360C]"
+          className="flex gap-2.5 rounded-xl border border-[var(--gopoli-signal)]/35 bg-[var(--gopoli-mist)] p-3 text-[13px] leading-snug text-[var(--gopoli-accent)]"
           role="status"
         >
-          <span aria-hidden>ℹ</span>
           <p>{bloqueoCrearMensaje}</p>
         </div>
       ) : null}
@@ -192,13 +209,13 @@ export function CrearServicioForm({
       <div>
         <label
           htmlFor="lugar-salida"
-          className="mb-2 block text-sm font-semibold text-[var(--gopoli-primary,#1B5E20)]"
+          className="mb-2 block text-sm font-semibold text-[var(--gopoli-pine)]"
         >
-          Lugar de Salida *
+          Lugar de salida *
         </label>
         <select
           id="lugar-salida"
-          className="w-full rounded-[10px] border border-[var(--gopoli-border,#E0E0E0)] bg-white px-4 py-3.5 text-[15px] focus:border-2 focus:border-[var(--gopoli-primary,#1B5E20)] focus:outline-none"
+          className="min-h-11 w-full rounded-xl border border-[var(--gopoli-border)] bg-white px-4 py-3 text-base focus:border-[var(--gopoli-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gopoli-signal)]/40"
           value={ubicacionSalida === "" ? "" : String(ubicacionSalida)}
           disabled={cargandoUbicaciones || bloqueado}
           onChange={(ev) => {
@@ -218,13 +235,13 @@ export function CrearServicioForm({
       <div>
         <label
           htmlFor="lugar-llegada"
-          className="mb-2 block text-sm font-semibold text-[var(--gopoli-primary,#1B5E20)]"
+          className="mb-2 block text-sm font-semibold text-[var(--gopoli-pine)]"
         >
-          Lugar de Llegada *
+          Lugar de llegada *
         </label>
         {sugerencias.length > 0 ? (
           <div className="mb-3">
-            <p className="mb-2 text-xs text-[var(--gopoli-text-muted,#757575)]">
+            <p className="mb-2 text-xs text-[var(--gopoli-text-muted)]">
               Sugerencias
             </p>
             <div className="flex flex-wrap gap-2">
@@ -232,7 +249,7 @@ export function CrearServicioForm({
                 <button
                   key={u.idUbicacion}
                   type="button"
-                  className="rounded-full bg-[#E8F5E9] px-3 py-1.5 text-[13px] text-[var(--gopoli-primary,#1B5E20)] hover:bg-[#C8E6C9]"
+                  className="min-h-11 rounded-full bg-[var(--gopoli-mist)] px-3 py-2 text-sm text-[var(--gopoli-pine)] transition-colors hover:bg-[color-mix(in_srgb,var(--gopoli-mist)_70%,var(--gopoli-secondary))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)]"
                   onClick={() => setUbicacionLlegada(u.idUbicacion)}
                 >
                   {u.nombreUbicacion}
@@ -243,7 +260,7 @@ export function CrearServicioForm({
         ) : null}
         <select
           id="lugar-llegada"
-          className="w-full rounded-[10px] border border-[var(--gopoli-border,#E0E0E0)] bg-white px-4 py-3.5 text-[15px] focus:border-2 focus:border-[var(--gopoli-primary,#1B5E20)] focus:outline-none"
+          className="min-h-11 w-full rounded-xl border border-[var(--gopoli-border)] bg-white px-4 py-3 text-base focus:border-[var(--gopoli-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gopoli-signal)]/40"
           value={ubicacionLlegada === "" ? "" : String(ubicacionLlegada)}
           disabled={cargandoUbicaciones || bloqueado}
           onChange={(ev) => {
@@ -263,7 +280,7 @@ export function CrearServicioForm({
       <div>
         <label
           htmlFor="fecha-servicio"
-          className="mb-2 block text-sm font-semibold text-[var(--gopoli-primary,#1B5E20)]"
+          className="mb-2 block text-sm font-semibold text-[var(--gopoli-pine)]"
         >
           Fecha *
         </label>
@@ -274,16 +291,16 @@ export function CrearServicioForm({
           value={fecha}
           disabled={bloqueado}
           onChange={(ev) => setFecha(ev.target.value)}
-          className="w-full rounded-[10px] border border-[var(--gopoli-border,#E0E0E0)] bg-white px-4 py-3.5 text-[15px] focus:border-2 focus:border-[var(--gopoli-primary,#1B5E20)] focus:outline-none"
+          className="min-h-11 w-full rounded-xl border border-[var(--gopoli-border)] bg-white px-4 py-3 text-base focus:border-[var(--gopoli-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gopoli-signal)]/40"
         />
       </div>
 
       <div>
         <label
           htmlFor="hora-servicio"
-          className="mb-2 block text-sm font-semibold text-[var(--gopoli-primary,#1B5E20)]"
+          className="mb-2 block text-sm font-semibold text-[var(--gopoli-pine)]"
         >
-          Hora de Salida *
+          Hora de salida *
         </label>
         <input
           id="hora-servicio"
@@ -291,12 +308,12 @@ export function CrearServicioForm({
           value={hora}
           disabled={bloqueado}
           onChange={(ev) => setHora(ev.target.value)}
-          className="w-full rounded-[10px] border border-[var(--gopoli-border,#E0E0E0)] bg-white px-4 py-3.5 text-[15px] focus:border-2 focus:border-[var(--gopoli-primary,#1B5E20)] focus:outline-none"
+          className="min-h-11 w-full rounded-xl border border-[var(--gopoli-border)] bg-white px-4 py-3 text-base focus:border-[var(--gopoli-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gopoli-signal)]/40"
         />
       </div>
 
       <fieldset disabled={bloqueado}>
-        <legend className="mb-2 text-sm font-semibold text-[var(--gopoli-primary,#1B5E20)]">
+        <legend className="mb-2 text-sm font-semibold text-[var(--gopoli-pine)]">
           Tipo de viaje *
         </legend>
         <label className="mb-2 flex cursor-pointer gap-3">
@@ -344,7 +361,7 @@ export function CrearServicioForm({
       />
 
       <div>
-        <p className="mb-2 text-sm font-semibold text-[var(--gopoli-primary,#1B5E20)]">
+        <p className="mb-2 text-sm font-semibold text-[var(--gopoli-pine)]">
           Capacidad *
         </p>
         <div className="flex items-center justify-center gap-6">
@@ -353,17 +370,19 @@ export function CrearServicioForm({
             aria-label="Reducir capacidad"
             disabled={capacidad <= CAPACIDAD_MIN || bloqueado}
             onClick={() => setCapacidad((c) => Math.max(CAPACIDAD_MIN, c - 1))}
-            className="text-3xl text-[var(--gopoli-primary,#1B5E20)] disabled:opacity-40"
+            className="inline-flex size-11 items-center justify-center rounded-full text-2xl text-[var(--gopoli-primary)] transition-colors hover:bg-[var(--gopoli-mist)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)]"
           >
             −
           </button>
-          <span className="text-[28px] font-bold tabular-nums">{capacidad}</span>
+          <span className="text-[28px] font-bold tabular-nums text-[var(--gopoli-accent)]">
+            {capacidad}
+          </span>
           <button
             type="button"
             aria-label="Aumentar capacidad"
             disabled={capacidad >= CAPACIDAD_MAX || bloqueado}
             onClick={() => setCapacidad((c) => Math.min(CAPACIDAD_MAX, c + 1))}
-            className="text-3xl text-[var(--gopoli-primary,#1B5E20)] disabled:opacity-40"
+            className="inline-flex size-11 items-center justify-center rounded-full text-2xl text-[var(--gopoli-primary)] transition-colors hover:bg-[var(--gopoli-mist)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)]"
           >
             +
           </button>
@@ -373,7 +392,7 @@ export function CrearServicioForm({
       <div
         className={
           accionFija
-            ? "sticky bottom-0 z-10 -mx-5 mt-1 border-t border-[var(--gopoli-border,#E0E0E0)] bg-white px-5 py-3"
+            ? "sticky bottom-0 z-10 -mx-4 mt-1 border-t border-[var(--gopoli-mist)] bg-[var(--gopoli-paper)] px-4 py-3"
             : "contents"
         }
       >
@@ -384,7 +403,7 @@ export function CrearServicioForm({
           loading={cargando}
           disabled={bloqueado || cargandoUbicaciones}
         >
-          Crear Servicio
+          Confirmar viaje
         </Button>
 
         {mensaje ? (

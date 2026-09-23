@@ -4,6 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  BottomSheet,
+  OriginDestStack,
+  SearchPill,
+  TripSheetSummary,
+  TripStatusBanner,
+  type SheetSnap,
+  type TripUiKind,
+} from "@/components/ride";
+import {
   CrearServicioForm,
   fetchServicio,
   useEstadoViajesUsuario,
@@ -33,7 +42,10 @@ export function InicioMapaView() {
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [routePath, setRoutePath] = useState<LatLngLiteral[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [routeFailed, setRouteFailed] = useState(false);
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("peek");
+  const [hasSelection, setHasSelection] = useState(false);
+  const [sinResultados, setSinResultados] = useState(false);
 
   const mensajeBloqueo = useMemo(() => {
     if (idServicioActivo != null) {
@@ -62,15 +74,26 @@ export function InicioMapaView() {
           id: "llegada",
           position: llegada,
           title: esViajeEnCurso ? "Destino del viaje" : "Llegada",
-          color: "red",
+          color: "amber",
         });
       }
       let ruta: LatLngLiteral[] = [];
+      let failed = false;
       if (salida && llegada) {
-        ruta = await rutaEntre(salida, llegada);
+        try {
+          ruta = await rutaEntre(salida, llegada);
+          if (ruta.length < 2) failed = true;
+        } catch {
+          failed = true;
+        }
       }
       setMarkers(next);
       setRoutePath(ruta);
+      setRouteFailed(failed);
+      setHasSelection(Boolean(salida || llegada));
+      if (salida && llegada && !esViajeEnCurso) {
+        setSheetSnap((s) => (s === "peek" ? "half" : s));
+      }
     },
     [],
   );
@@ -111,6 +134,7 @@ export function InicioMapaView() {
       avisoMsg?: string,
     ) => {
       if (avisoMsg) setAviso(avisoMsg);
+      else setAviso(null);
       void aplicarSalidaLlegada(salida, llegada, false);
     },
     [aplicarSalidaLlegada],
@@ -121,138 +145,157 @@ export function InicioMapaView() {
     router.push(`/grupo/${idServicio}`);
   }
 
+  const tripKind: TripUiKind = useMemo(() => {
+    if (aviso || routeFailed) return "route_error";
+    if (sinResultados) return "no_results";
+    if (idServicioEnCurso != null) return "in_progress";
+    if (idServicioActivo != null) return "active_group";
+    if (hasSelection && markers.length >= 2) return "planning";
+    return "empty";
+  }, [
+    aviso,
+    routeFailed,
+    sinResultados,
+    idServicioEnCurso,
+    idServicioActivo,
+    hasSelection,
+    markers.length,
+  ]);
+
+  const peekTitle =
+    tripKind === "in_progress"
+      ? "Viaje en curso"
+      : tripKind === "active_group"
+        ? "Grupo activo"
+        : tripKind === "planning"
+          ? "Confirmar viaje"
+          : tripKind === "route_error"
+            ? "No hay ruta"
+            : "¿A dónde vas?";
+
+  const peekSubtitle =
+    tripKind === "empty"
+      ? "Elige salida y destino para ver la ruta"
+      : tripKind === "planning"
+        ? "Revisa cupos, hora y confirma"
+        : tripKind === "in_progress"
+          ? "Sigue la ruta en el mapa"
+          : tripKind === "active_group"
+            ? "Abre el grupo para iniciar o unirte"
+            : tripKind === "route_error"
+              ? "Revisa las ubicaciones o la conexión"
+              : undefined;
+
   return (
-    <div className="relative h-full min-h-0 w-full flex-1">
+    <div className="relative h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
       <div className="absolute inset-0 z-0">
         <GoPoliMap markers={markers} routePath={routePath} />
       </div>
 
-      <div className="pointer-events-none relative z-30 flex flex-col gap-2 p-3 md:p-4">
+      <div className="pointer-events-none relative z-30 flex w-full min-w-0 flex-col gap-2 p-3 md:max-w-md md:p-4">
         {idServicioEnCurso != null ? (
-          <div className="pointer-events-auto flex items-stretch overflow-hidden rounded-[10px] bg-[var(--gopoli-secondary,#2E7D32)] text-white shadow">
-            <button
-              type="button"
-              className="flex flex-1 items-center gap-2.5 px-3.5 py-3 text-left text-sm font-semibold"
-              onClick={() => void mostrarRutaServicio(idServicioEnCurso)}
-            >
-              <span aria-hidden>🗺</span>
-              <span className="flex-1">Viaje en curso — Ruta en el mapa</span>
-            </button>
-            <Link
-              href={`/grupo/${idServicioEnCurso}`}
-              className="flex items-center px-3 hover:bg-black/10"
-              aria-label="Grupo y acciones"
-            >
-              👥
-            </Link>
-          </div>
-        ) : null}
-
-        {idServicioActivo != null && idServicioEnCurso == null ? (
-          <Link
-            href={`/grupo/${idServicioActivo}`}
-            className="pointer-events-auto flex items-center gap-2.5 rounded-[10px] bg-[var(--gopoli-primary,#1B5E20)] px-3.5 py-3 text-sm font-semibold text-white shadow"
-          >
-            <span aria-hidden>👥</span>
-            <span className="flex-1">Tienes un grupo activo — Ver mi grupo</span>
-            <span aria-hidden>›</span>
-          </Link>
-        ) : null}
-
-        <div className="pointer-events-auto rounded-xl bg-white shadow-md">
-          <label className="sr-only" htmlFor="destino-query">
-            ¿A dónde vamos?
-          </label>
-          <div className="flex items-center gap-2 px-3">
-            <span className="text-[var(--gopoli-primary,#1B5E20)]" aria-hidden>
-              🔍
-            </span>
-            <input
-              id="destino-query"
-              type="search"
-              placeholder="¿A dónde vamos?"
-              value={destinoQuery}
-              onChange={(e) => setDestinoQuery(e.target.value)}
-              className="w-full border-0 bg-transparent py-3.5 text-[15px] outline-none placeholder:text-[#BDBDBD]"
-            />
-            {destinoQuery ? (
-              <button
-                type="button"
-                aria-label="Limpiar"
-                className="text-[var(--gopoli-text-muted,#757575)]"
-                onClick={() => setDestinoQuery("")}
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        {aviso ? (
-          <div
-            className="pointer-events-auto rounded-[10px] bg-[#333] px-3 py-2 text-sm text-white"
-            role="status"
-          >
-            {aviso}
-            <button
-              type="button"
-              className="ml-2 underline"
-              onClick={() => setAviso(null)}
-            >
-              Cerrar
-            </button>
-          </div>
-        ) : null}
-      </div>
-
-      <div
-        className={[
-          "absolute z-20 flex flex-col overflow-hidden bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.16)]",
-          "inset-x-0 bottom-0 rounded-t-[20px]",
-          "md:inset-x-auto md:bottom-auto md:right-4 md:top-24 md:w-[min(100%-2rem,420px)] md:rounded-2xl md:shadow-lg",
-          sheetOpen
-            ? "h-[50dvh] md:h-[min(70dvh,calc(100%-8rem))]"
-            : "",
-        ].join(" ")}
-      >
-        <button
-          type="button"
-          className="flex min-h-11 w-full shrink-0 flex-col items-stretch px-4 pb-2 pt-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--gopoli-primary,#1B5E20)]"
-          onClick={() => setSheetOpen((open) => !open)}
-          aria-expanded={sheetOpen}
-          aria-controls="panel-crear-servicio"
-        >
-          <span
-            className="mx-auto mb-1 h-1 w-10 rounded-full bg-[#E0E0E0] md:hidden"
-            aria-hidden
+          <TripStatusBanner
+            kind="in_progress"
+            serviceId={idServicioEnCurso}
+            onShowRoute={() => void mostrarRutaServicio(idServicioEnCurso)}
           />
-          <span className="flex items-center gap-3">
-            <span className="flex-1 text-base font-bold text-[var(--gopoli-primary,#1B5E20)]">
-              Crear servicio
-            </span>
-            <span className="text-sm text-[var(--gopoli-text-muted,#757575)]" aria-hidden>
-              {sheetOpen ? "▾" : "▴"}
-            </span>
-          </span>
-        </button>
-        <div
-          id="panel-crear-servicio"
-          hidden={!sheetOpen}
-          className="min-h-0 flex-1 overflow-y-auto px-5 pb-2"
+        ) : idServicioActivo != null ? (
+          <TripStatusBanner kind="active_group" serviceId={idServicioActivo} />
+        ) : null}
+
+        <OriginDestStack
+          originHint={
+            markers.find((m) => m.id === "salida")?.title ??
+            "Salida (elige en la hoja)"
+          }
         >
-            <p className="mb-4 text-[13px] leading-snug text-[var(--gopoli-text-muted,#757575)]">
-              Elige salida y destino: la ruta en el mapa usa las coordenadas del
-              servidor.
-            </p>
-            <CrearServicioForm
-              destinoQuery={destinoQuery}
-              bloqueoCrearMensaje={mensajeBloqueo}
-              onCoordenadasSeleccion={onCoordenadas}
-              onServicioCreado={onServicioCreado}
-              accionFija
-            />
-        </div>
+          <SearchPill
+            value={destinoQuery}
+            onChange={(v) => {
+              setDestinoQuery(v);
+              setSinResultados(false);
+              if (v.trim()) setSheetSnap((s) => (s === "peek" ? "half" : s));
+            }}
+            onClear={() => setSinResultados(false)}
+          />
+        </OriginDestStack>
+
+        {aviso || routeFailed ? (
+          <TripStatusBanner
+            kind="route_error"
+            message={
+              aviso ??
+              "No se pudo trazar la ruta entre esos puntos. Prueba otras ubicaciones."
+            }
+            onDismissError={() => {
+              setAviso(null);
+              setRouteFailed(false);
+            }}
+          />
+        ) : null}
+
+        {sinResultados ? <TripStatusBanner kind="no_results" /> : null}
       </div>
+
+      <BottomSheet.Root
+        id="panel-crear-servicio"
+        snap={sheetSnap}
+        onSnapChange={setSheetSnap}
+      >
+        <BottomSheet.Handle />
+        <BottomSheet.PeekSummary>
+          <TripSheetSummary
+            title={peekTitle}
+            subtitle={peekSubtitle}
+            signalLabel={
+              tripKind === "planning" || tripKind === "in_progress"
+                ? "Destino marcado"
+                : null
+            }
+          />
+        </BottomSheet.PeekSummary>
+
+        <BottomSheet.Header>
+          <div
+            className={
+              sheetSnap === "peek" ? "hidden md:block" : undefined
+            }
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-[var(--gopoli-pine)]">
+                  {tripKind === "in_progress"
+                    ? "Viaje en curso"
+                    : "Crear servicio"}
+                </h2>
+                <p className="mt-0.5 text-sm text-[var(--gopoli-text-muted)]">
+                  Elige salida y destino: la ruta usa las coordenadas del
+                  servidor.
+                </p>
+              </div>
+              {idServicioEnCurso != null || idServicioActivo != null ? (
+                <Link
+                  href={`/grupo/${idServicioEnCurso ?? idServicioActivo}`}
+                  className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-[var(--gopoli-primary)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)]"
+                >
+                  Ver grupo
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </BottomSheet.Header>
+
+        <BottomSheet.Body>
+          <CrearServicioForm
+            destinoQuery={destinoQuery}
+            bloqueoCrearMensaje={mensajeBloqueo}
+            onCoordenadasSeleccion={onCoordenadas}
+            onServicioCreado={onServicioCreado}
+            onFiltroSinResultados={setSinResultados}
+            accionFija
+          />
+        </BottomSheet.Body>
+      </BottomSheet.Root>
     </div>
   );
 }

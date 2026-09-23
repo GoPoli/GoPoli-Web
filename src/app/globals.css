@@ -1,29 +1,58 @@
 @import "tailwindcss";
 
 /*
- * GoPoli brand tokens — values from frontend/lib/theme/app_colors.dart
- * Use with Tailwind: bg-[var(--gopoli-primary)], text-[var(--gopoli-text-muted)], etc.
+ * GoPoli — campus pine and turn-signal amber.
+ * Quiet UI: pine + signal amber, paper backgrounds.
  */
 :root {
+  --gopoli-pine: #143528;
   --gopoli-primary: #1b5e20;
-  --gopoli-secondary: #2e7d32;
-  --gopoli-accent: #ffc107;
-  --gopoli-text-muted: #757575;
-  --gopoli-field-border: #e0e0e0;
+  --gopoli-secondary: #2f6b45;
+  --gopoli-signal: #e6a317;
+  --gopoli-accent: #8a5a00;
+  --gopoli-mist: #e7f2ea;
+  --gopoli-paper: #f7fbf8;
+  --gopoli-text-muted: #4e6156;
+  --gopoli-field-border: #c9d7cc;
+  --gopoli-border: #c9d7cc;
+  /* Sombras únicas y bajas — hoja y píldoras flotantes */
+  --gopoli-sheet-shadow: 0 -2px 16px color-mix(in srgb, var(--gopoli-pine) 10%, transparent);
+  --gopoli-float-shadow: 0 2px 12px color-mix(in srgb, var(--gopoli-pine) 12%, transparent);
 
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7fbf8;
+  --foreground: #122018;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

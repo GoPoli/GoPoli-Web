@@ -20,11 +20,11 @@ export const themeTokens = {
 
 /** Hex values (same source as CSS vars) for metadata / non-CSS use. */
 export const themeColors = {
-  primary: "#1B5E20",
-  secondary: "#2E7D32",
-  accent: "#FFC107",
-  textMuted: "#757575",
-  fieldBorder: "#E0E0E0",
+  primary: "#143528",
+  secondary: "#1B5E20",
+  accent: "#E6A317",
+  textMuted: "#4E6156",
+  fieldBorder: "#C9D7CC",
 } as const;
 
 export type ThemeTokenName = (typeof themeTokens)[keyof typeof themeTokens];
