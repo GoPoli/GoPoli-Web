@@ -85,8 +85,8 @@ export function MessageThreadView({ tripId }: MessageThreadViewProps) {
   }
 
   return (
-    <div className="mx-auto flex min-h-[70dvh] w-full max-w-2xl flex-col">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--gopoli-border,#E0E0E0)] px-4 py-3 md:px-6">
+    <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col bg-[var(--gopoli-paper,#F7FBF8)] md:my-6 md:rounded-2xl md:border md:border-[var(--gopoli-border,#E0E0E0)] md:bg-white">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--gopoli-border,#E0E0E0)] px-4 py-3 md:px-6">
         <div>
           <h1 className="text-lg font-bold text-[var(--gopoli-primary,#1B5E20)]">Chat del grupo</h1>
           <p className="text-xs text-[var(--gopoli-text-muted,#757575)]">Servicio #{tripId}</p>
@@ -115,7 +115,7 @@ export function MessageThreadView({ tripId }: MessageThreadViewProps) {
         <EmptyState title={visibleError} action={<Button onClick={() => void reload()}>Reintentar</Button>} />
       ) : (
         <>
-          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4 md:p-6">
+          <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 md:p-6">
             {messages.length === 0 ? (
               <EmptyState title="Aún no hay mensajes" description="Escribe algo para coordinar con tu grupo." />
             ) : (
@@ -153,14 +153,14 @@ export function MessageThreadView({ tripId }: MessageThreadViewProps) {
           </div>
 
           {visibleError && messages.length > 0 ? (
-            <p className="px-4 text-sm text-red-600 md:px-6" role="alert">
+            <p className="shrink-0 px-4 text-sm text-red-600 md:px-6" role="alert">
               {visibleError}
             </p>
           ) : null}
 
           <form
             onSubmit={(e) => void onSend(e)}
-            className="flex items-end gap-2 border-t border-[var(--gopoli-border,#E0E0E0)] p-4 md:p-6"
+            className="flex shrink-0 items-end gap-2 border-t border-[var(--gopoli-border,#E0E0E0)] bg-inherit p-3 md:rounded-b-2xl md:p-4"
           >
             <div className="min-w-0 flex-1">
               <TextField

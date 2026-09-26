@@ -81,6 +81,8 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname() ?? "";
   const isMap = pathname === "/map";
+  const isChatThread = /^\/messages\/[^/]+$/.test(pathname);
+  const fitsViewport = isMap || isChatThread;
   const title = currentTitle(pathname);
   const { isAuthenticated: sessionAuth } = useAuth();
   const isAuthenticated = isAuthenticatedProp ?? sessionAuth;
@@ -89,7 +91,7 @@ export function AppShell({
     <div
       className={[
         "flex bg-[var(--gopoli-paper,#F7FBF8)] text-[var(--foreground,#122018)]",
-        isMap ? "h-dvh overflow-hidden" : "min-h-dvh",
+        fitsViewport ? "h-dvh overflow-hidden" : "min-h-dvh",
       ].join(" ")}
     >
       <aside
@@ -154,7 +156,7 @@ export function AppShell({
       <div
         className={[
           "flex min-w-0 flex-1 flex-col",
-          isMap ? "h-full min-h-0" : "",
+          fitsViewport ? "h-full min-h-0" : "",
         ].join(" ")}
       >
         <header
@@ -206,7 +208,9 @@ export function AppShell({
           className={
             isMap
               ? "flex min-h-0 w-full max-w-none flex-1 flex-col overflow-hidden p-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"
-              : "mx-auto w-full max-w-5xl flex-1 px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
+              : isChatThread
+                ? "mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:px-6 md:pb-0"
+                : "mx-auto w-full max-w-5xl flex-1 px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
           }
         >
           {children}
