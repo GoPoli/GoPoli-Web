@@ -6,7 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "GoPoli",
     description:
       "Viaje compartido entre estudiantes del Politécnico (@elpoli.edu.co).",
+    id: "/",
     start_url: "/",
+    scope: "/",
     display: "standalone",
     background_color: "#143528",
     theme_color: "#143528",
@@ -14,28 +16,31 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "es",
     icons: [
       {
-        src: "/favicon.svg",
+        src: "/icons/app-icon.svg",
         sizes: "any",
         type: "image/svg+xml",
+        purpose: "any",
       },
       {
-        src: "/icons/Icon-192.png",
+        src: "/icons/icon-192.png",
         sizes: "192x192",
         type: "image/png",
+        purpose: "any",
       },
       {
-        src: "/icons/Icon-512.png",
+        src: "/icons/icon-512.png",
         sizes: "512x512",
         type: "image/png",
+        purpose: "any",
       },
       {
-        src: "/icons/Icon-maskable-192.png",
+        src: "/icons/icon-maskable-192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/icons/Icon-maskable-512.png",
+        src: "/icons/icon-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

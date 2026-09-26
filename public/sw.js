@@ -1,12 +1,13 @@
 // Solo se cachea el app shell; la API vive en otro origen y nunca se cachea.
-const CACHE_NAME = "gopoli-shell-v3";
+const CACHE_NAME = "gopoli-shell-v4";
 const SHELL_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/icons/Icon-192.png",
-  "/icons/Icon-512.png",
-  "/icons/Icon-maskable-192.png",
-  "/icons/Icon-maskable-512.png",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-maskable-192.png",
+  "/icons/icon-maskable-512.png",
+  "/icons/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {

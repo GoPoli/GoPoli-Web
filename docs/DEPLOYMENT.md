@@ -72,7 +72,7 @@ Checklist tras desplegar en HTTPS:
 
 - [ ] `GET {NEXT_PUBLIC_API_URL}/locations` responde desde el navegador (sin error de CORS).
 - [ ] `https://<dominio>/manifest.webmanifest` muestra el nombre **GoPoli** y `theme_color` `#143528`.
-- [ ] Los íconos `/icons/Icon-192.png` y `/icons/Icon-512.png` cargan.
+- [ ] Los íconos `/icons/icon-192.png`, `/icons/icon-512.png` y `/icons/apple-touch-icon.png` cargan y muestran el logo de GoPoli.
 - [ ] El service worker `/sw.js` queda registrado y Cache Storage solo contiene el *app shell*.
 - [ ] *Instalar aplicación* funciona en Chrome Android; en iOS desde *Compartir* → *Añadir a pantalla de inicio*.
 - [ ] Tras instalar, el inicio de sesión y el perfil funcionan contra la API real.
