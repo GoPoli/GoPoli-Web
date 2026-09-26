@@ -38,11 +38,7 @@ docker run -d --name gopoli-web -p 3000:3000 \
   ghcr.io/gopoli/gopoli-web:latest
 ```
 
-Si el paquete es privado, inicia sesión antes con un token de GitHub con permiso `read:packages`:
-
-```bash
-echo $GHCR_TOKEN | docker login ghcr.io -u <usuario> --password-stdin
-```
+La imagen es pública: no hace falta iniciar sesión en GHCR.
 
 ---
 
