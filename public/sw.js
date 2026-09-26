@@ -1,7 +1,5 @@
-/* GoPoli PWA — cache de app shell únicamente.
- * NO cachear respuestas de API autenticadas ni datos de viajes en vivo.
- */
-const CACHE_NAME = "gopoli-shell-v2";
+// Solo se cachea el app shell; la API vive en otro origen y nunca se cachea.
+const CACHE_NAME = "gopoli-shell-v3";
 const SHELL_URLS = [
   "/",
   "/manifest.webmanifest",
@@ -31,24 +29,8 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-function isApiOrLiveRequest(url) {
-  const path = url.pathname;
-  if (
-    path.startsWith("/usuario") ||
-    path.startsWith("/servicio") ||
-    path.startsWith("/servicios") ||
-    path.startsWith("/login") ||
-    path.startsWith("/register") ||
-    path.startsWith("/carreras") ||
-    path.startsWith("/ubicaciones")
-  ) {
-    return true;
-  }
-  // Peticiones cross-origin al backend (NEXT_PUBLIC_API_URL)
-  if (url.origin !== self.location.origin) {
-    return true;
-  }
-  return false;
+function isLiveRequest(url) {
+  return url.origin !== self.location.origin;
 }
 
 self.addEventListener("fetch", (event) => {
@@ -62,17 +44,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (isApiOrLiveRequest(url)) {
-    return; // network only — nunca cachear API / viajes
+  if (isLiveRequest(url)) {
+    return;
   }
 
-  // Next reescribe estos archivos en cada cambio de env; cache-first dejaba
-  // la URL vieja del backend pegada en el navegador.
+  // Los chunks de Next cambian con cada despliegue: siempre desde la red.
   if (url.pathname.startsWith("/_next/")) {
     return;
   }
 
-  // Navegación / shell: network-first con fallback a cache
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
@@ -86,7 +66,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Assets estáticos del origen: cache-first
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
