@@ -231,7 +231,8 @@ Las pruebas cubren las validaciones de autenticación (correo institucional, con
 | `node.js.yml` | Push y PR a `main` | `pnpm install --frozen-lockfile`, lint, typecheck, pruebas y build en Node 22 y 24 |
 | `codeql.yml` | Push, PR y semanal | Análisis estático de seguridad (TypeScript y Actions) |
 | `dependency-review.yml` | PR a `main` | Bloquea dependencias con vulnerabilidades conocidas |
-| `packaging.yml` | Push a `main`, tags `v*.*.*`, manual | Construye y publica la imagen en GHCR con SBOM y provenance y, desde `main`, despliega a producción con el workflow `deploy.yml` de [GoPoli/.github](https://github.com/GoPoli/.github/blob/main/docs/CI_CD.md#despliegue-en-el-servidor) |
+| `packaging.yml` | Push a `main`, tags `v*.*.*`, manual | Construye y publica la imagen en GHCR con SBOM y provenance |
+| `deploy.yml` | Publicación exitosa en `main`, manual | Despliega la app completa (DB, API y PWA) con el workflow reutilizable de [GoPoli/.github](https://github.com/GoPoli/.github/blob/main/docs/CI_CD.md#despliegue-en-el-servidor) |
 | `stale.yml` | Diario | Marca y cierra issues y PRs inactivos |
 
 Dependabot revisa semanalmente las dependencias de pnpm (ecosistema `npm`), la imagen base de Docker y las versiones de las Actions.
