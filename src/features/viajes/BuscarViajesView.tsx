@@ -33,25 +33,31 @@ export function BuscarViajesView() {
   const [uniendoId, setUniendoId] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
+  const consultar = useCallback(
+    () =>
+      fetchServiciosActivos()
+        .then(async (list) => {
+          setServicios(list);
+          await refrescarEstado();
+        })
+        .catch((e: unknown) => {
+          setError(
+            e instanceof Error ? e.message : "Error al cargar servicios activos",
+          );
+        })
+        .finally(() => setCargando(false)),
+    [refrescarEstado],
+  );
+
+  const cargar = useCallback(() => {
     setCargando(true);
     setError(null);
-    try {
-      const list = await fetchServiciosActivos();
-      setServicios(list);
-      await refrescarEstado();
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Error al cargar servicios activos",
-      );
-    } finally {
-      setCargando(false);
-    }
-  }, [refrescarEstado]);
+    return consultar();
+  }, [consultar]);
 
   useEffect(() => {
-    void cargar();
-  }, [cargar]);
+    void consultar();
+  }, [consultar]);
 
   async function onUnirse(idServicio: number) {
     const idUsuario = getUserId();

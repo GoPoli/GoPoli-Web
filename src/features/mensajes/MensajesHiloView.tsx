@@ -40,41 +40,44 @@ export function MensajesHiloView({ idServicio }: MensajesHiloViewProps) {
   const [enviando, setEnviando] = useState(false);
   const listaRef = useRef<HTMLDivElement>(null);
 
-  const cargar = useCallback(
-    async (mostrarCarga = true) => {
-      if (idSesion == null) {
-        setError("No hay sesión activa");
-        setCargando(false);
-        return;
-      }
-      if (mostrarCarga) {
-        setCargando(true);
-        setError(null);
-      }
-      try {
-        const list = await fetchMensajes(idServicio, idSesion);
-        setMensajes(list);
-        setError(null);
-      } catch (e) {
-        const msg =
-          e instanceof MensajeApiError
-            ? e.body || e.message
-            : "Error de conexión";
-        if (mostrarCarga) setError(msg);
-      } finally {
-        setCargando(false);
-      }
+  const sinSesion = idSesion == null;
+  const errorVisible = sinSesion ? "No hay sesión activa" : error;
+  const cargandoVisible = cargando && !sinSesion;
+
+  const consultar = useCallback(
+    (mostrarError: boolean) => {
+      if (idSesion == null) return Promise.resolve();
+      return fetchMensajes(idServicio, idSesion)
+        .then((list) => {
+          setMensajes(list);
+          setError(null);
+        })
+        .catch((e: unknown) => {
+          if (!mostrarError) return;
+          setError(
+            e instanceof MensajeApiError
+              ? e.body || e.message
+              : "Error de conexión",
+          );
+        })
+        .finally(() => setCargando(false));
     },
     [idServicio, idSesion],
   );
 
+  const cargar = useCallback(() => {
+    setCargando(true);
+    setError(null);
+    return consultar(true);
+  }, [consultar]);
+
   useEffect(() => {
-    void cargar(true);
+    void consultar(true);
     const t = window.setInterval(() => {
-      void cargar(false);
+      void consultar(false);
     }, AUTO_REFRESH_MS);
     return () => window.clearInterval(t);
-  }, [cargar]);
+  }, [consultar]);
 
   useEffect(() => {
     const el = listaRef.current;
@@ -129,15 +132,15 @@ export function MensajesHiloView({ idServicio }: MensajesHiloViewProps) {
         </div>
       </div>
 
-      {cargando ? (
+      {cargandoVisible ? (
         <div className="flex flex-1 items-center justify-center py-16">
           <Spinner label="Cargando mensajes…" />
         </div>
-      ) : error && mensajes.length === 0 ? (
+      ) : errorVisible && mensajes.length === 0 ? (
         <EmptyState
-          title={error}
+          title={errorVisible}
           action={
-            <Button onClick={() => void cargar(true)}>Reintentar</Button>
+            <Button onClick={() => void cargar()}>Reintentar</Button>
           }
         />
       ) : (
@@ -202,9 +205,9 @@ export function MensajesHiloView({ idServicio }: MensajesHiloViewProps) {
             )}
           </div>
 
-          {error && mensajes.length > 0 ? (
+          {errorVisible && mensajes.length > 0 ? (
             <p className="px-4 text-sm text-red-600 md:px-6" role="alert">
-              {error}
+              {errorVisible}
             </p>
           ) : null}
 

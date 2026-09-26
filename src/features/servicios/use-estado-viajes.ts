@@ -16,6 +16,38 @@ export type EstadoViajesUsuario = {
   refrescar: () => Promise<void>;
 };
 
+type ConsultaEstadoViajes =
+  | { tipo: "sin-sesion" }
+  | { tipo: "error"; mensaje: string }
+  | {
+      tipo: "ok";
+      idServicioActivo: number | null;
+      idServicioEnCurso: number | null;
+    };
+
+async function consultarEstadoViajes(): Promise<ConsultaEstadoViajes> {
+  const idUsuario = getUserId();
+  if (idUsuario == null) {
+    return { tipo: "sin-sesion" };
+  }
+  try {
+    const [activo, enCurso] = await Promise.all([
+      fetchIdServicioActivoUsuario(idUsuario),
+      fetchServicioEnCurso(idUsuario),
+    ]);
+    return {
+      tipo: "ok",
+      idServicioActivo: activo,
+      idServicioEnCurso: enCurso?.idServicio ?? null,
+    };
+  } catch (e) {
+    return {
+      tipo: "error",
+      mensaje: e instanceof Error ? e.message : "Error al cargar viajes",
+    };
+  }
+}
+
 /** Estado de grupo en planificación + viaje en curso (como Flutter Home/Viajes/Mapa). */
 export function useEstadoViajesUsuario(): EstadoViajesUsuario {
   const [idServicioActivo, setIdServicioActivo] = useState<number | null>(null);
@@ -25,37 +57,35 @@ export function useEstadoViajesUsuario(): EstadoViajesUsuario {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refrescar = useCallback(async () => {
-    const idUsuario = getUserId();
-    if (idUsuario == null) {
+  const aplicar = useCallback((consulta: ConsultaEstadoViajes) => {
+    if (consulta.tipo === "ok") {
+      setIdServicioActivo(consulta.idServicioActivo);
+      setIdServicioEnCurso(consulta.idServicioEnCurso);
+      setError(null);
+    } else if (consulta.tipo === "sin-sesion") {
       setIdServicioActivo(null);
       setIdServicioEnCurso(null);
-      setCargando(false);
       setError("No hay sesión activa");
-      return;
+    } else {
+      setError(consulta.mensaje);
     }
-    setCargando(true);
-    setError(null);
-    try {
-      const [activo, enCurso] = await Promise.all([
-        fetchIdServicioActivoUsuario(idUsuario),
-        fetchServicioEnCurso(idUsuario),
-      ]);
-      setIdServicioActivo(activo);
-      setIdServicioEnCurso(enCurso?.idServicio ?? null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar viajes");
-    } finally {
-      setCargando(false);
-    }
+    setCargando(false);
   }, []);
 
+  const refrescar = useCallback(() => {
+    if (getUserId() != null) {
+      setCargando(true);
+      setError(null);
+    }
+    return consultarEstadoViajes().then(aplicar);
+  }, [aplicar]);
+
   useEffect(() => {
-    void refrescar();
+    void consultarEstadoViajes().then(aplicar);
     return subscribeSession(() => {
       void refrescar();
     });
-  }, [refrescar]);
+  }, [aplicar, refrescar]);
 
   return {
     idServicioActivo,

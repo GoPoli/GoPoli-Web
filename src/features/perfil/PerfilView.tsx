@@ -41,26 +41,30 @@ export function PerfilView() {
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
   const [busy, setBusy] = useState(false);
 
-  const cargar = useCallback(async () => {
+  const consultar = useCallback(
+    () =>
+      obtenerPerfil()
+        .then((u) => setUsuario(u))
+        .catch((e: unknown) => {
+          const msg =
+            e instanceof ApiException
+              ? e.message
+              : "No se pudo cargar el perfil";
+          setError(msg);
+        })
+        .finally(() => setCargando(false)),
+    [],
+  );
+
+  const cargar = useCallback(() => {
     setCargando(true);
     setError(null);
-    try {
-      const u = await obtenerPerfil();
-      setUsuario(u);
-    } catch (e) {
-      const msg =
-        e instanceof ApiException
-          ? e.message
-          : "No se pudo cargar el perfil";
-      setError(msg);
-    } finally {
-      setCargando(false);
-    }
-  }, []);
+    return consultar();
+  }, [consultar]);
 
   useEffect(() => {
-    void cargar();
-  }, [cargar]);
+    void consultar();
+  }, [consultar]);
 
   useEffect(() => {
     if (!toast) return;

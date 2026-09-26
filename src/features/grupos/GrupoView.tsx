@@ -39,6 +39,13 @@ function etiquetaMiembro(m: MiembroGrupo, esCreadorGrupo: boolean): string {
 
 const AUTO_REFRESH_MS = 5000;
 
+async function obtenerMiembros(idServicio: number): Promise<MiembroGrupo[]> {
+  const list = await fetchMiembros(idServicio);
+  if (list.length > 0) return list;
+  await new Promise((r) => setTimeout(r, 450));
+  return fetchMiembros(idServicio);
+}
+
 export function GrupoView({ idServicio }: GrupoViewProps) {
   const router = useRouter();
   const idSesion = getUserId();
@@ -54,50 +61,45 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
   >(null);
   const [accionPendiente, setAccionPendiente] = useState(false);
 
-  const cargarTodo = useCallback(
-    async (mostrarCarga = true) => {
-      if (mostrarCarga) {
-        setCargando(true);
-        setErrorMiembros(null);
-      }
-      try {
-        let list = await fetchMiembros(idServicio);
-        if (list.length === 0) {
-          await new Promise((r) => setTimeout(r, 450));
-          list = await fetchMiembros(idServicio);
-        }
-        setMiembros(list);
-        setErrorMiembros(null);
-      } catch (e) {
-        const msg =
-          e instanceof ServicioApiError
-            ? e.body.length > 200
-              ? `No se pudo cargar el grupo (${e.status})`
-              : e.body || e.message
-            : "Error de conexión";
-        setMiembros([]);
-        setErrorMiembros(msg);
-      } finally {
-        setCargando(false);
-      }
-
-      try {
-        const s = await fetchServicio(idServicio);
-        if (s) setEstadoServicio(s.idEstadoServicio);
-      } catch {
-        /* ignore */
-      }
-    },
+  const consultar = useCallback(
+    () =>
+      obtenerMiembros(idServicio)
+        .then((list) => {
+          setMiembros(list);
+          setErrorMiembros(null);
+        })
+        .catch((e: unknown) => {
+          const msg =
+            e instanceof ServicioApiError
+              ? e.body.length > 200
+                ? `No se pudo cargar el grupo (${e.status})`
+                : e.body || e.message
+              : "Error de conexión";
+          setMiembros([]);
+          setErrorMiembros(msg);
+        })
+        .finally(() => setCargando(false))
+        .then(() => fetchServicio(idServicio))
+        .then((s) => {
+          if (s) setEstadoServicio(s.idEstadoServicio);
+        })
+        .catch(() => undefined),
     [idServicio],
   );
 
+  const cargarTodo = useCallback(() => {
+    setCargando(true);
+    setErrorMiembros(null);
+    return consultar();
+  }, [consultar]);
+
   useEffect(() => {
-    void cargarTodo(true);
+    void consultar();
     const t = window.setInterval(() => {
-      void cargarTodo(false);
+      void consultar();
     }, AUTO_REFRESH_MS);
     return () => window.clearInterval(t);
-  }, [cargarTodo]);
+  }, [consultar]);
 
   const esCreador = miembros.some(
     (m) => m.idUsuario === idSesion && m.rol === ROL_GRUPO_CREADOR,
@@ -193,7 +195,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => void cargarTodo(true)}
+              onClick={() => void cargarTodo()}
             >
               Actualizar
             </Button>
@@ -225,7 +227,7 @@ export function GrupoView({ idServicio }: GrupoViewProps) {
         <EmptyState
           title={errorMiembros}
           action={
-            <Button onClick={() => void cargarTodo(true)}>Reintentar</Button>
+            <Button onClick={() => void cargarTodo()}>Reintentar</Button>
           }
         />
       ) : (

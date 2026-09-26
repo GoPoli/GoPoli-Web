@@ -132,39 +132,48 @@ export function AgendaView() {
   const [guardando, setGuardando] = useState(false);
   const [publicandoId, setPublicandoId] = useState<number | null>(null);
 
-  const cargar = useCallback(async (signal?: AbortSignal) => {
-    if (idUsuario == null) {
-      setCargando(false);
-      setError("Inicia sesión para ver tu agenda");
-      return;
-    }
-    setCargando(true);
-    setError(null);
-    try {
-      const [list, ubis] = await Promise.all([
+  const sinSesion = idUsuario == null;
+  const errorVisible = sinSesion ? "Inicia sesión para ver tu agenda" : error;
+  const cargandoVisible = cargando && !sinSesion;
+
+  const consultar = useCallback(
+    (signal?: AbortSignal) => {
+      if (idUsuario == null) return Promise.resolve();
+      return Promise.all([
         fetchRutasHabituales(idUsuario, signal),
         fetchUbicaciones(signal),
-      ]);
-      if (signal?.aborted) return;
-      setRutas(list);
-      setUbicaciones(ubis);
-    } catch (err) {
-      if (signal?.aborted) return;
-      if (err instanceof AgendaApiError) {
-        setError(err.body || err.message);
-      } else {
-        setError("No se pudo cargar la agenda");
-      }
-    } finally {
-      if (!signal?.aborted) setCargando(false);
-    }
-  }, [idUsuario]);
+      ])
+        .then(([list, ubis]) => {
+          if (signal?.aborted) return;
+          setRutas(list);
+          setUbicaciones(ubis);
+        })
+        .catch((err: unknown) => {
+          if (signal?.aborted) return;
+          setError(
+            err instanceof AgendaApiError
+              ? err.body || err.message
+              : "No se pudo cargar la agenda",
+          );
+        })
+        .finally(() => {
+          if (!signal?.aborted) setCargando(false);
+        });
+    },
+    [idUsuario],
+  );
+
+  const cargar = useCallback(() => {
+    setCargando(true);
+    setError(null);
+    return consultar();
+  }, [consultar]);
 
   useEffect(() => {
     const ac = new AbortController();
-    void cargar(ac.signal);
+    void consultar(ac.signal);
     return () => ac.abort();
-  }, [cargar]);
+  }, [consultar]);
 
   function abrirNueva() {
     setEditandoId(null);
@@ -300,7 +309,7 @@ export function AgendaView() {
     }
   }
 
-  if (cargando) {
+  if (cargandoVisible) {
     return (
       <div className="flex justify-center py-16">
         <Spinner label="Cargando agenda…" />
@@ -330,9 +339,9 @@ export function AgendaView() {
         </div>
       ) : null}
 
-      {error ? (
+      {errorVisible ? (
         <p className="mb-4 text-sm text-red-600" role="alert">
-          {error}{" "}
+          {errorVisible}{" "}
           <button type="button" className="underline" onClick={() => void cargar()}>
             Reintentar
           </button>

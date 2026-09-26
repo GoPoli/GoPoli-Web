@@ -27,6 +27,44 @@ import { GoPoliMap } from "./GoPoliMap";
 import { rutaEntre } from "./route-service";
 import type { LatLngLiteral, MapMarker } from "./types";
 
+function marcadoresDeViaje(
+  salida: LatLng | null,
+  llegada: LatLng | null,
+  esViajeEnCurso: boolean,
+): MapMarker[] {
+  const marcadores: MapMarker[] = [];
+  if (salida) {
+    marcadores.push({
+      id: "salida",
+      position: salida,
+      title: esViajeEnCurso ? "Salida del viaje" : "Salida",
+      color: "green",
+    });
+  }
+  if (llegada) {
+    marcadores.push({
+      id: "llegada",
+      position: llegada,
+      title: esViajeEnCurso ? "Destino del viaje" : "Llegada",
+      color: "amber",
+    });
+  }
+  return marcadores;
+}
+
+async function trazarRuta(
+  salida: LatLng | null,
+  llegada: LatLng | null,
+): Promise<{ ruta: LatLngLiteral[]; failed: boolean }> {
+  if (!salida || !llegada) return { ruta: [], failed: false };
+  try {
+    const ruta = await rutaEntre(salida, llegada);
+    return { ruta, failed: ruta.length < 2 };
+  } catch {
+    return { ruta: [], failed: true };
+  }
+}
+
 export function InicioMapaView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -55,46 +93,20 @@ export function InicioMapaView() {
   }, [idServicioActivo]);
 
   const aplicarSalidaLlegada = useCallback(
-    async (
+    (
       salida: LatLng | null,
       llegada: LatLng | null,
       esViajeEnCurso: boolean,
-    ) => {
-      const next: MapMarker[] = [];
-      if (salida) {
-        next.push({
-          id: "salida",
-          position: salida,
-          title: esViajeEnCurso ? "Salida del viaje" : "Salida",
-          color: "green",
-        });
-      }
-      if (llegada) {
-        next.push({
-          id: "llegada",
-          position: llegada,
-          title: esViajeEnCurso ? "Destino del viaje" : "Llegada",
-          color: "amber",
-        });
-      }
-      let ruta: LatLngLiteral[] = [];
-      let failed = false;
-      if (salida && llegada) {
-        try {
-          ruta = await rutaEntre(salida, llegada);
-          if (ruta.length < 2) failed = true;
-        } catch {
-          failed = true;
+    ) =>
+      trazarRuta(salida, llegada).then(({ ruta, failed }) => {
+        setMarkers(marcadoresDeViaje(salida, llegada, esViajeEnCurso));
+        setRoutePath(ruta);
+        setRouteFailed(failed);
+        setHasSelection(Boolean(salida || llegada));
+        if (salida && llegada && !esViajeEnCurso) {
+          setSheetSnap((s) => (s === "peek" ? "half" : s));
         }
-      }
-      setMarkers(next);
-      setRoutePath(ruta);
-      setRouteFailed(failed);
-      setHasSelection(Boolean(salida || llegada));
-      if (salida && llegada && !esViajeEnCurso) {
-        setSheetSnap((s) => (s === "peek" ? "half" : s));
-      }
-    },
+      }),
     [],
   );
 

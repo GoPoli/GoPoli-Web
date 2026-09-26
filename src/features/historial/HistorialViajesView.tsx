@@ -18,26 +18,30 @@ export function HistorialViajesView() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
+  const consultar = useCallback(
+    () =>
+      obtenerHistorialViajes()
+        .then((lista) => setViajes(lista))
+        .catch((e: unknown) => {
+          setError(
+            e instanceof ApiException
+              ? e.message
+              : "No se pudo cargar el historial",
+          );
+        })
+        .finally(() => setCargando(false)),
+    [],
+  );
+
+  const cargar = useCallback(() => {
     setCargando(true);
     setError(null);
-    try {
-      const lista = await obtenerHistorialViajes();
-      setViajes(lista);
-    } catch (e) {
-      setError(
-        e instanceof ApiException
-          ? e.message
-          : "No se pudo cargar el historial",
-      );
-    } finally {
-      setCargando(false);
-    }
-  }, []);
+    return consultar();
+  }, [consultar]);
 
   useEffect(() => {
-    void cargar();
-  }, [cargar]);
+    void consultar();
+  }, [consultar]);
 
   if (cargando) {
     return (

@@ -68,48 +68,51 @@ export function EditarPerfilForm() {
     carrera?: string;
   }>({});
 
-  const cargar = useCallback(async () => {
+  const consultar = useCallback(
+    () =>
+      Promise.all([obtenerPerfil(), fetchCarreras()])
+        .then(([u, listaCarreras]) => {
+          setCarreras(listaCarreras);
+          setUsuario(u);
+          setNombre(u.nombre);
+          setCorreo(u.correo);
+          setTel(u.tel ?? "");
+          setCarreraId(u.idCarrera ?? "");
+          setFotoBase64(u.fotoPerfil ?? null);
+        })
+        .catch((e: unknown) => {
+          const fallback = getSessionUser();
+          if (fallback) {
+            setNombre(fallback.nombre);
+            setCorreo(fallback.correo);
+            setTel(fallback.tel ?? "");
+            setCarreraId(fallback.idCarrera ?? "");
+            setFotoBase64(fallback.fotoPerfil ?? null);
+            setUsuario({
+              ...fallback,
+              vehiculo: null,
+            });
+          } else {
+            setErrorCarga(
+              e instanceof ApiException
+                ? e.message
+                : "No se pudo cargar el perfil",
+            );
+          }
+        })
+        .finally(() => setCargando(false)),
+    [fetchCarreras],
+  );
+
+  const cargar = useCallback(() => {
     setCargando(true);
     setErrorCarga(null);
-    try {
-      const [u, listaCarreras] = await Promise.all([
-        obtenerPerfil(),
-        fetchCarreras(),
-      ]);
-      setCarreras(listaCarreras);
-      setUsuario(u);
-      setNombre(u.nombre);
-      setCorreo(u.correo);
-      setTel(u.tel ?? "");
-      setCarreraId(u.idCarrera ?? "");
-      setFotoBase64(u.fotoPerfil ?? null);
-    } catch (e) {
-      const fallback = getSessionUser();
-      if (fallback) {
-        setNombre(fallback.nombre);
-        setCorreo(fallback.correo);
-        setTel(fallback.tel ?? "");
-        setCarreraId(fallback.idCarrera ?? "");
-        setFotoBase64(fallback.fotoPerfil ?? null);
-        setUsuario({
-          ...fallback,
-          vehiculo: null,
-        });
-      } else {
-        setErrorCarga(
-          e instanceof ApiException
-            ? e.message
-            : "No se pudo cargar el perfil",
-        );
-      }
-    } finally {
-      setCargando(false);
-    }
-  }, [fetchCarreras]);
+    return consultar();
+  }, [consultar]);
 
   useEffect(() => {
-    void cargar();
-  }, [cargar]);
+    void consultar();
+  }, [consultar]);
 
   useEffect(() => {
     if (!toast) return;
