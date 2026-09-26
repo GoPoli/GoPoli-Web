@@ -1,0 +1,2 @@
+*.sh text eol=lf
+runtime.envmap text eol=lf
