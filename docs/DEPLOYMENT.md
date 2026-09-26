@@ -22,7 +22,7 @@ La PWA se despliega de forma independiente a la API. Solo necesita conocer la UR
 | `PORT` | Servidor | Puerto de Next.js. Por defecto `3000` |
 
 - **Con la imagen Docker**, `NEXT_PUBLIC_API_URL` se lee al arrancar el contenedor; cambiarla solo requiere reiniciar con otro valor.
-- **Sin Docker** (Vercel, `npm run build`), la variable se incrusta al compilar; cambiarla requiere un nuevo build.
+- **Sin Docker** (Vercel, `pnpm build`), la variable se incrusta al compilar; cambiarla requiere un nuevo build.
 
 No configures secretos de JWT ni credenciales de PostgreSQL en la PWA.
 
@@ -49,9 +49,10 @@ echo $GHCR_TOKEN | docker login ghcr.io -u <usuario> --password-stdin
 ## 4. Despliegue sin Contenedores
 
 ```bash
-npm ci
-NEXT_PUBLIC_API_URL=https://gopoli-api.up.railway.app npm run build
-npm start
+corepack enable
+pnpm install --frozen-lockfile
+NEXT_PUBLIC_API_URL=https://gopoli-api.up.railway.app pnpm build
+pnpm start
 ```
 
 ---
@@ -69,7 +70,7 @@ npm start
 
 Checklist tras desplegar en HTTPS:
 
-- [ ] `GET {NEXT_PUBLIC_API_URL}/ubicaciones` responde desde el navegador.
+- [ ] `GET {NEXT_PUBLIC_API_URL}/locations` responde desde el navegador (sin error de CORS).
 - [ ] `https://<dominio>/manifest.webmanifest` muestra el nombre **GoPoli** y `theme_color` `#143528`.
 - [ ] Los íconos `/icons/Icon-192.png` y `/icons/Icon-512.png` cargan.
 - [ ] El service worker `/sw.js` queda registrado y Cache Storage solo contiene el *app shell*.

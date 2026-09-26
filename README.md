@@ -22,13 +22,14 @@ GoPoli-Web es el cliente de **GoPoli**: una Progressive Web App construida con *
 La PWA consume la API REST de [GoPoli-API](https://github.com/GoPoli/GoPoli-API). No guarda secretos ni habla con la base de datos: solo necesita la URL pública de la API.
 
 > [!NOTE]
-> Este repositorio conserva la historia completa del cliente. Hasta septiembre de 2026 fue una aplicación Flutter; desde el commit *Sustituye el cliente Flutter por la PWA* es la PWA Next.js actual.
+> La PWA reemplazó a la app Flutter original, que se conserva archivada con toda su historia en [GoPoli-Mobile](https://github.com/GoPoli/GoPoli-Mobile).
 
 ## Tecnologías Principales
 
 | Capa | Elección | Versión |
 | --- | --- | --- |
 | Framework | Next.js (App Router, salida `standalone`) | 16.3 |
+| Gestor de paquetes | pnpm (fijado en `packageManager`) | 11 |
 | UI | React, Tailwind CSS | React 19.2, Tailwind 4 |
 | Lenguaje | TypeScript | 5 |
 | Mapa | Leaflet + teselas de OpenStreetMap | 1.9 |
@@ -52,12 +53,12 @@ La PWA consume la API REST de [GoPoli-API](https://github.com/GoPoli/GoPoli-API)
 ```text
 GoPoli-Web/
 ├── .github/
-│   ├── dependabot.yml              # Actualización de dependencias (npm, Docker, Actions)
+│   ├── dependabot.yml              # Actualización de dependencias (pnpm, Docker, Actions)
 │   └── workflows/
 │       ├── codeql.yml              # Análisis de seguridad CodeQL
 │       ├── dependency-review.yml   # Revisión de dependencias en PRs
-│       ├── node.js.yml             # Lint, typecheck, pruebas y build
-│       ├── packaging.yml           # Publicación de la imagen en GHCR
+│       ├── node.js.yml             # Lint, typecheck, pruebas y build con pnpm
+│       ├── packaging.yml           # Publicación de la imagen en GHCR (SBOM y provenance)
 │       └── stale.yml               # Limpieza de issues y PRs inactivos
 │
 ├── docs/
@@ -67,56 +68,56 @@ GoPoli-Web/
 │
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/                 # /login, /registro
+│   │   ├── (auth)/                 # /login, /signup
 │   │   ├── (main)/                 # Zona con sesión: mapa, viajes, perfil…
 │   │   ├── layout.tsx
 │   │   └── manifest.ts             # Manifiesto PWA
 │   ├── components/                 # brand, layout, ride, ui
 │   ├── config/                     # env.ts (URL de la API), theme.ts
 │   ├── features/                   # Un dominio por carpeta: vista, cliente HTTP y tipos
-│   ├── lib/api/                    # Encabezados y excepciones HTTP
-│   ├── services/api/               # Cliente fetch tipado
-│   └── types/
+│   └── lib/                        # Cliente HTTP (timeout, token, errores) y utilidades de parseo
 │
 ├── .dockerignore
 ├── .env.example
-├── Dockerfile                      # Imagen multi-etapa (build → runtime standalone)
+├── Dockerfile                      # Imagen multi-etapa con pnpm (deps → build → runtime standalone)
 ├── entrypoint.sh                   # Inyecta variables públicas en tiempo de arranque
 ├── runtime.envmap                  # Variables reemplazables en runtime
 ├── next.config.ts
 ├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml             # Política de scripts de instalación de dependencias
 └── LICENSE
 ```
 
 ## Mapa de Pantallas
 
 ```text
-/                          inicio
+/                          inicio (redirige a /login)
 ├── /login                 entrar
-├── /registro              crear cuenta
+├── /signup                crear cuenta
 └── zona con sesión
-    ├── /mapa              mapa
-    ├── /viajes            mis viajes
-    ├── /buscar            buscar cupo
-    ├── /servicio/nuevo    publicar salida
-    ├── /grupo/:id         grupo del viaje
-    ├── /agenda            rutas habituales
-    ├── /mensajes          bandeja
-    ├── /mensajes/:id      hilo
-    └── /perfil
-        ├── /editar
-        ├── /conductor     registro de conductor
-        └── /historial
+    ├── /map               mapa (?trip=:id muestra la ruta del viaje)
+    ├── /trips             mis viajes
+    ├── /search            buscar cupo
+    ├── /trips/new         publicar salida
+    ├── /groups/:id        grupo del viaje
+    ├── /schedule          rutas habituales
+    ├── /messages          bandeja
+    ├── /messages/:id      hilo
+    └── /profile
+        ├── /edit
+        ├── /driver        registro de conductor
+        └── /history
 ```
 
-En `src/features/` cada dominio tiene su vista, su cliente HTTP y sus tipos: `auth`, `mapa`, `viajes`, `servicios`, `grupos`, `agenda`, `mensajes`, `perfil`, `conductor`, `historial`, `catalogo` y `pwa`.
+En `src/features/` cada dominio tiene su vista, su cliente HTTP y sus tipos: `auth`, `map`, `trips`, `groups`, `schedule`, `messages`, `profile`, `driver`, `history`, `catalog` y `pwa`. El código y las rutas están en inglés; todos los textos de la interfaz están en español.
 
 ## Guía de Instalación
 
 ### Requisitos Previos
 
 - Node.js 22 o superior
-- npm 10+
+- pnpm 11 (`corepack enable` lo activa con la versión fijada en `package.json`)
 - Una instancia de [GoPoli-API](https://github.com/GoPoli/GoPoli-API) accesible (local o desplegada)
 - Docker (opcional, para contenedorización)
 
@@ -125,9 +126,10 @@ En `src/features/` cada dominio tiene su vista, su cliente HTTP y sus tipos: `au
 ```bash
 git clone https://github.com/GoPoli/GoPoli-Web.git
 cd GoPoli-Web
-cp .env.example .env.local
-npm install
-npm run dev
+cp .env.example .env
+corepack enable
+pnpm install
+pnpm dev
 ```
 
 Abre [http://localhost:3000](http://localhost:3000). La API debe responder en la URL configurada en `NEXT_PUBLIC_API_URL`.
@@ -135,13 +137,13 @@ Abre [http://localhost:3000](http://localhost:3000). La API debe responder en la
 ### 2. Build de Producción
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 ### 3. Construcción de la Imagen Docker
 
-El `Dockerfile` es multi-etapa: instala dependencias, compila la app en modo `standalone` y genera una imagen final mínima que se ejecuta con el usuario sin privilegios `node`.
+El `Dockerfile` es multi-etapa: instala dependencias con pnpm y el lockfile congelado, compila la app en modo `standalone` y genera una imagen final mínima que se ejecuta con el usuario sin privilegios `1000`, con `HEALTHCHECK` sobre `/login`. La compilación original queda en `.next-build` y al arrancar se copia a `.next`, lo que permite ejecutar el contenedor con sistema de archivos de solo lectura y `.next` en `tmpfs`.
 
 ```bash
 docker build --platform linux/amd64 -t ghcr.io/gopoli/gopoli-web:latest .
@@ -150,8 +152,10 @@ docker build --platform linux/amd64 -t ghcr.io/gopoli/gopoli-web:latest .
 ### 4. Ejecución con Docker
 
 ```bash
-docker run -d --name gopoli-web -p 3000:3000 \
+docker run -d --name gopoli-web -p 127.0.0.1:3000:3000 \
   -e NEXT_PUBLIC_API_URL=http://localhost:8080 \
+  --read-only --tmpfs /tmp --tmpfs /app/.next:uid=1000,gid=1000 \
+  --cap-drop ALL --security-opt no-new-privileges \
   ghcr.io/gopoli/gopoli-web:latest
 ```
 
@@ -159,14 +163,7 @@ La misma imagen sirve para cualquier entorno: la URL de la API se define al arra
 
 ### 5. Publicación en GitHub Container Registry
 
-La publicación es automática: cada push a `main` construye la imagen y la publica en `ghcr.io/gopoli/gopoli-web` con las etiquetas `latest` y `sha-<commit>`. Un tag `vX.Y.Z` publica además `X.Y.Z` y `X.Y`.
-
-Publicación manual (requiere un token con `write:packages`):
-
-```bash
-echo $GHCR_TOKEN | docker login ghcr.io -u <usuario> --password-stdin
-docker push ghcr.io/gopoli/gopoli-web:latest
-```
+La publicación es automática: cada push a `main` construye la imagen y la publica en `ghcr.io/gopoli/gopoli-web` con las etiquetas `latest` y `sha-<commit>`, junto con su SBOM y la atestación de procedencia. Un tag `vX.Y.Z` publica además `X.Y.Z` y `X.Y`.
 
 ### 6. Despliegue
 
@@ -190,7 +187,7 @@ Opciones de hosting, HTTPS y verificación de la PWA en [docs/DEPLOYMENT.md](doc
 Next.js incrusta las variables `NEXT_PUBLIC_*` al compilar. Para publicar una única imagen reutilizable:
 
 1. La imagen se compila con el marcador `__NEXT_PUBLIC_API_URL__`.
-2. Al arrancar, `entrypoint.sh` lee `runtime.envmap` y reemplaza cada marcador en `.next/` por el valor de la variable de entorno correspondiente.
+2. Al arrancar, `entrypoint.sh` copia la compilación a `.next/`, lee `runtime.envmap` y reemplaza cada marcador por el valor de la variable de entorno correspondiente.
 3. Si la variable no está definida, se usa el valor por defecto declarado en `runtime.envmap`.
 
 Formato de `runtime.envmap`:
@@ -206,36 +203,38 @@ Para exponer otra variable pública en runtime, agrégala a `runtime.envmap` y c
 - `POST /login` devuelve el JWT; la PWA lo guarda **solo en memoria** (nunca en `localStorage`).
 - Las rutas protegidas envían `Authorization: Bearer <token>`.
 - Recargar la página cierra la sesión. El cierre de sesión es solo del lado del cliente.
+- Si una vista protegida se abre sin sesión, el cliente no llama a la API y muestra *Inicia sesión para continuar*.
 
 Detalle de la decisión en [src/features/auth/SECURITY.md](src/features/auth/SECURITY.md).
 
 ## PWA
 
 - Manifiesto en `src/app/manifest.ts` con nombre **GoPoli** y `theme_color` `#143528`.
-- Service worker `public/sw.js`: cachea solo el *app shell*, nunca respuestas de la API ni datos de viajes en vivo.
+- Service worker `public/sw.js`: cachea solo el *app shell* del mismo origen, nunca respuestas de la API ni datos de viajes en vivo.
+- Cabeceras de seguridad en todas las rutas: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` y `Permissions-Policy`; sin cabecera `X-Powered-By`.
 - Instalación: Chrome Android → *Instalar aplicación*; iOS Safari → *Compartir* → *Añadir a pantalla de inicio*.
 
 ## Testing
 
 ```bash
-npm test
-npm run typecheck
-npm run lint
+pnpm test
+pnpm typecheck
+pnpm lint
 ```
 
-Las pruebas cubren las validaciones de autenticación y el armado del payload de perfil.
+Las pruebas cubren las validaciones de autenticación (correo institucional, contraseña de 8 caracteres a 72 bytes, nombre y teléfono) y el armado del payload de perfil.
 
 ## CI/CD
 
 | Workflow | Disparador | Qué hace |
 | --- | --- | --- |
-| `node.js.yml` | Push y PR a `main` | Lint, typecheck, pruebas y build en Node 22 y 24 |
+| `node.js.yml` | Push y PR a `main` | `pnpm install --frozen-lockfile`, lint, typecheck, pruebas y build en Node 22 y 24 |
 | `codeql.yml` | Push, PR y semanal | Análisis estático de seguridad (TypeScript y Actions) |
 | `dependency-review.yml` | PR a `main` | Bloquea dependencias con vulnerabilidades conocidas |
-| `packaging.yml` | Push a `main`, tags `v*.*.*`, manual | Construye y publica la imagen en GHCR |
+| `packaging.yml` | Push a `main`, tags `v*.*.*`, manual | Construye y publica la imagen en GHCR con SBOM y provenance |
 | `stale.yml` | Diario | Marca y cierra issues y PRs inactivos |
 
-Dependabot revisa semanalmente npm, la imagen base de Docker y las versiones de las Actions.
+Dependabot revisa semanalmente las dependencias de pnpm (ecosistema `npm`), la imagen base de Docker y las versiones de las Actions.
 
 ## Contribución
 
