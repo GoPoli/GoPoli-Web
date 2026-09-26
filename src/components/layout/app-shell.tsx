@@ -16,7 +16,7 @@ import {
 import { useAuth } from "@/features/auth/auth-context";
 
 export type AppShellNavItem = {
-  href: "/mapa" | "/buscar" | "/viajes" | "/mensajes" | "/agenda" | "/perfil";
+  href: "/map" | "/search" | "/trips" | "/messages" | "/schedule" | "/profile";
   label: string;
   title: string;
   icon: ComponentType<{ className?: string }>;
@@ -24,37 +24,37 @@ export type AppShellNavItem = {
 
 export const APP_SHELL_NAV: readonly AppShellNavItem[] = [
   {
-    href: "/mapa",
+    href: "/map",
     label: "Inicio",
     title: "Inicio",
     icon: IconMap,
   },
   {
-    href: "/buscar",
+    href: "/search",
     label: "Buscar",
     title: "Buscar",
     icon: IconSearch,
   },
   {
-    href: "/viajes",
+    href: "/trips",
     label: "Viajes",
     title: "Viajes",
     icon: IconRoute,
   },
   {
-    href: "/mensajes",
+    href: "/messages",
     label: "Mensajes",
     title: "Mensajes",
     icon: IconChat,
   },
   {
-    href: "/agenda",
+    href: "/schedule",
     label: "Agenda",
     title: "Agenda",
     icon: IconAgenda,
   },
   {
-    href: "/perfil",
+    href: "/profile",
     label: "Perfil",
     title: "Perfil",
     icon: IconPerson,
@@ -63,10 +63,6 @@ export const APP_SHELL_NAV: readonly AppShellNavItem[] = [
 
 export type AppShellProps = {
   children: ReactNode;
-  /**
-   * Si se omite, usa la sesión en memoria (`useAuth`).
-   * Se puede forzar para pruebas.
-   */
   isAuthenticated?: boolean;
 };
 
@@ -84,7 +80,7 @@ export function AppShell({
   isAuthenticated: isAuthenticatedProp,
 }: AppShellProps) {
   const pathname = usePathname() ?? "";
-  const esMapa = pathname === "/mapa";
+  const isMap = pathname === "/map";
   const title = currentTitle(pathname);
   const { isAuthenticated: sessionAuth } = useAuth();
   const isAuthenticated = isAuthenticatedProp ?? sessionAuth;
@@ -93,7 +89,7 @@ export function AppShell({
     <div
       className={[
         "flex bg-[var(--gopoli-paper,#F7FBF8)] text-[var(--foreground,#122018)]",
-        esMapa ? "h-dvh overflow-hidden" : "min-h-dvh",
+        isMap ? "h-dvh overflow-hidden" : "min-h-dvh",
       ].join(" ")}
     >
       <aside
@@ -102,7 +98,7 @@ export function AppShell({
       >
         <div className="border-b border-[var(--gopoli-mist,#E7F2EA)] px-4 py-5">
           <Link
-            href="/mapa"
+            href="/map"
             className="inline-flex rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)] focus-visible:ring-offset-2"
           >
             <GoPoliBrand markClassName="size-8" wordmarkClassName="text-2xl" />
@@ -137,7 +133,7 @@ export function AppShell({
         <div className="border-t border-[var(--gopoli-mist)] p-2.5">
           {isAuthenticated ? (
             <Link
-              href="/perfil"
+              href="/profile"
               className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--gopoli-text-muted)] hover:bg-[var(--gopoli-mist)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary)] focus-visible:ring-offset-2"
             >
               <IconPerson className="size-5" />
@@ -158,20 +154,20 @@ export function AppShell({
       <div
         className={[
           "flex min-w-0 flex-1 flex-col",
-          esMapa ? "h-full min-h-0" : "",
+          isMap ? "h-full min-h-0" : "",
         ].join(" ")}
       >
         <header
           className={[
             "sticky top-0 z-30 flex min-h-14 shrink-0 items-center justify-between gap-3 px-4 pt-[env(safe-area-inset-top)] text-white md:min-h-14 md:px-5",
-            esMapa
+            isMap
               ? "bg-[var(--gopoli-pine)]/92 backdrop-blur-sm"
               : "bg-[var(--gopoli-pine)]",
           ].join(" ")}
         >
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              href="/mapa"
+              href="/map"
               className="inline-flex items-center gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gopoli-pine)] md:hidden"
               aria-label="GoPoli inicio"
             >
@@ -181,14 +177,14 @@ export function AppShell({
                 wordmarkClassName="text-lg"
               />
             </Link>
-            {!esMapa ? (
+            {!isMap ? (
               <h1 className="truncate text-base font-semibold md:text-lg">
                 {title}
               </h1>
             ) : (
               <h1 className="sr-only">{title}</h1>
             )}
-            {esMapa ? (
+            {isMap ? (
               <p className="hidden truncate text-sm text-white/80 md:block">
                 Mapa
               </p>
@@ -208,7 +204,7 @@ export function AppShell({
         <main
           id="contenido-principal"
           className={
-            esMapa
+            isMap
               ? "flex min-h-0 w-full max-w-none flex-1 flex-col overflow-hidden p-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"
               : "mx-auto w-full max-w-5xl flex-1 px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
           }

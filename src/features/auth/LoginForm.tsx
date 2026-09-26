@@ -5,70 +5,40 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { GoPoliBrand } from "@/components/brand/GoPoliLogo";
 import { Button, TextField } from "@/components/ui";
-import { ApiException } from "@/services/api/client";
+import { ApiError } from "@/lib/api/client";
 import { useAuth } from "./auth-context";
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="size-5"
-      aria-hidden
-    >
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  ) : (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="size-5"
-      aria-hidden
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
+import { EyeIcon } from "./EyeIcon";
 
 export function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const [correo, setCorreo] = useState("");
-  const [contrasena, setContrasena] = useState("");
-  const [verContrasena, setVerContrasena] = useState(false);
-  const [mensaje, setMensaje] = useState("");
-  const [cargando, setCargando] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setCargando(true);
-    setMensaje("");
+    setLoading(true);
+    setMessage("");
 
     try {
-      await login({ correo, contrasena });
-      router.replace("/mapa");
+      await login({ email, password });
+      router.replace("/map");
     } catch (err) {
-      if (err instanceof ApiException) {
-        setMensaje(err.message);
+      if (err instanceof ApiError) {
+        setMessage(err.message);
       } else {
-        setMensaje("Error de conexión con el servidor");
+        setMessage("Error de conexión con el servidor");
       }
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   }
 
-  const mensajeEsExito = mensaje.startsWith("Bienvenido");
+  const isSuccess = message.startsWith("Bienvenido");
 
   return (
     <form
@@ -93,37 +63,37 @@ export function LoginForm() {
       <div className="mt-9 flex w-full flex-col gap-4">
         <TextField
           type="email"
-          name="correo"
+          name="email"
           autoComplete="email"
           inputMode="email"
           placeholder="email@elpoli.edu.co"
-          value={correo}
-          onChange={(e) => setCorreo(e.target.value)}
-          disabled={cargando}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={loading}
           required
           aria-label="Correo electrónico"
         />
 
         <TextField
-          type={verContrasena ? "text" : "password"}
-          name="contrasena"
+          type={showPassword ? "text" : "password"}
+          name="password"
           autoComplete="current-password"
-          placeholder="Password"
-          value={contrasena}
-          onChange={(e) => setContrasena(e.target.value)}
-          disabled={cargando}
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={loading}
           required
           aria-label="Contraseña"
           suffixIcon={
             <button
               type="button"
-              onClick={() => setVerContrasena((v) => !v)}
+              onClick={() => setShowPassword((v) => !v)}
               className="rounded p-1 text-[var(--gopoli-text-muted,#757575)] hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)]"
               aria-label={
-                verContrasena ? "Ocultar contraseña" : "Mostrar contraseña"
+                showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
               }
             >
-              <EyeIcon open={verContrasena} />
+              <EyeIcon open={showPassword} />
             </button>
           }
         />
@@ -134,29 +104,29 @@ export function LoginForm() {
         variant="primary"
         size="lg"
         fullWidth
-        loading={cargando}
+        loading={loading}
         className="mt-6"
       >
         Continuar
       </Button>
 
-      {mensaje ? (
+      {message ? (
         <p
           role="alert"
           className={`mt-4 text-center text-sm ${
-            mensajeEsExito
+            isSuccess
               ? "text-[var(--gopoli-secondary,#2E7D32)]"
               : "text-red-600"
           }`}
         >
-          {mensaje}
+          {message}
         </p>
       ) : null}
 
       <p className="mt-4 text-center text-sm text-[var(--gopoli-text-muted,#757575)]">
         ¿No tienes una cuenta?{" "}
         <Link
-          href="/registro"
+          href="/signup"
           className="font-semibold text-[var(--gopoli-primary,#1B5E20)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gopoli-primary,#1B5E20)]"
         >
           Crear una nueva cuenta

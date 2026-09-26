@@ -1,104 +1,81 @@
-/** Mirrors Flutter `Usuario` / backend `UsuarioDto` (auth payloads). */
-export type Usuario = {
-  idUsuario: number;
-  correo: string;
-  nombre: string;
-  tel?: string | null;
-  idCarrera?: number | null;
-  idTipoUsuario?: number | null;
-  idEstado?: number | null;
-  nota?: number | null;
-  fotoPerfil?: string | null;
-  isDriver: boolean;
+import { isRecord, toInt, toNumber, toOptionalText, toText } from "@/lib/parse";
+
+export const USER_TYPE_DRIVER = 2;
+
+export type Vehicle = {
+  id: number | null;
+  brand: string;
+  model: string;
+  color: string;
+  plate: string;
 };
 
-/** Mirrors Flutter `LoginResponse`. */
+export type User = {
+  id: number;
+  email: string;
+  name: string;
+  phone: string | null;
+  programId: number | null;
+  userTypeId: number | null;
+  statusId: number | null;
+  rating: number | null;
+  profilePhoto: string | null;
+  isDriver: boolean;
+  vehicle: Vehicle | null;
+};
+
 export type LoginResponse = {
   token: string;
-  usuario: Usuario;
-};
-
-/** Mirrors Flutter `Carrera` (registro dropdown). */
-export type Carrera = {
-  idCarrera: number;
-  nombreCarrera: string;
-};
-
-export type RegisterPayload = {
-  correo: string;
-  contrasena: string;
-  nombre: string;
-  tel: string;
-  idCarrera: number;
+  user: User;
 };
 
 export type LoginPayload = {
-  correo: string;
-  contrasena: string;
+  email: string;
+  password: string;
 };
 
-function toInt(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Math.trunc(value);
-  }
-  if (typeof value === "string") {
-    const parsed = Number.parseInt(value, 10);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
+export type RegisterPayload = {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  programId: number;
+};
+
+export function parseVehicle(json: unknown): Vehicle | null {
+  if (!isRecord(json)) return null;
+  return {
+    id: toInt(json.id),
+    brand: toText(json.brand),
+    model: toText(json.model),
+    color: toText(json.color),
+    plate: toText(json.plate),
+  };
 }
 
-function toOptionalInt(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null;
-  const n = toInt(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function parseUsuario(json: unknown): Usuario {
+export function parseUser(json: unknown): User {
   if (!isRecord(json)) {
     throw new Error("Respuesta de usuario inválida");
   }
-  const idTipo = toOptionalInt(json.idTipoUsuario);
-  const isDriverJson = json.isDriver === true || json.driver === true;
+  const userTypeId = toInt(json.userTypeId);
   return {
-    idUsuario: toInt(json.idUsuario),
-    correo: json.correo?.toString() ?? "",
-    nombre: json.nombre?.toString() ?? "",
-    tel: json.tel != null ? String(json.tel) : null,
-    idCarrera: toOptionalInt(json.idCarrera),
-    idTipoUsuario: idTipo,
-    idEstado: toOptionalInt(json.idEstado),
-    nota:
-      json.nota != null && typeof json.nota === "number"
-        ? json.nota
-        : json.nota != null
-          ? Number(json.nota)
-          : null,
-    fotoPerfil: json.fotoPerfil != null ? String(json.fotoPerfil) : null,
-    isDriver: isDriverJson || idTipo === 2,
+    id: toInt(json.id) ?? 0,
+    email: toText(json.email),
+    name: toText(json.name),
+    phone: toOptionalText(json.phone),
+    programId: toInt(json.programId),
+    userTypeId,
+    statusId: toInt(json.statusId),
+    rating: toNumber(json.rating),
+    profilePhoto: toOptionalText(json.profilePhoto),
+    isDriver: json.driver === true || userTypeId === USER_TYPE_DRIVER,
+    vehicle: parseVehicle(json.vehicle),
   };
 }
 
 export function parseLoginResponse(json: unknown): LoginResponse {
-  if (!isRecord(json) || !isRecord(json.usuario)) {
+  if (!isRecord(json) || !isRecord(json.user)) {
     throw new Error("Respuesta de login inválida");
   }
-  return {
-    token: json.token?.toString() ?? "",
-    usuario: parseUsuario(json.usuario),
-  };
-}
-
-export function parseCarrera(json: unknown): Carrera {
-  if (!isRecord(json)) {
-    throw new Error("Carrera inválida");
-  }
-  return {
-    idCarrera: toInt(json.idCarrera),
-    nombreCarrera: json.nombreCarrera?.toString() ?? "",
-  };
+  return { token: toText(json.token), user: parseUser(json.user) };
 }

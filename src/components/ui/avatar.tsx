@@ -3,9 +3,7 @@
 import type { KeyboardEvent, MouseEvent } from "react";
 
 export type ProfileAvatarProps = {
-  /** Foto en base64 (con o sin prefijo data URL). */
-  fotoBase64?: string | null;
-  /** Radio en px (diámetro = radius * 2). Por defecto 50 como en Flutter. */
+  photoBase64?: string | null;
   radius?: number;
   alt?: string;
   onClick?: () => void;
@@ -25,15 +23,14 @@ function decodeBase64Src(raw: string | null | undefined): string | null {
   }
 }
 
-/** Equivalente a Flutter `ProfileAvatar`. */
 export function ProfileAvatar({
-  fotoBase64,
+  photoBase64,
   radius = 50,
   alt = "Foto de perfil",
   onClick,
   className = "",
 }: ProfileAvatarProps) {
-  const src = decodeBase64Src(fotoBase64);
+  const src = decodeBase64Src(photoBase64);
   const size = radius * 2;
   const interactive = typeof onClick === "function";
 
@@ -64,7 +61,7 @@ export function ProfileAvatar({
 
   if (src) {
     const img = (
-      // eslint-disable-next-line @next/next/no-img-element -- base64 avatars
+      // eslint-disable-next-line @next/next/no-img-element -- avatares en base64
       <img
         src={src}
         alt={alt}

@@ -1,11 +1,5 @@
 "use client";
 
-/**
- * Auth context: JWT kept in memory only (React state + session module).
- * Full page reload clears the session — see SECURITY.md.
- * Backend only supports Authorization: Bearer; no httpOnly cookie without backend change.
- */
-
 import {
   createContext,
   useCallback,
@@ -15,6 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { fetchPrograms } from "@/features/catalog/api";
+import type { Program } from "@/features/catalog/types";
 import * as authService from "./auth-service";
 import {
   clearSession,
@@ -23,108 +19,75 @@ import {
   subscribeSession,
   type AuthSession,
 } from "./session";
-import type {
-  Carrera,
-  LoginPayload,
-  LoginResponse,
-  RegisterPayload,
-  Usuario,
-} from "./types";
+import type { LoginPayload, LoginResponse, RegisterPayload, User } from "./types";
 
 export type AuthContextValue = {
   token: string | null;
-  usuario: Usuario | null;
+  user: User | null;
   isAuthenticated: boolean;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
-  register: (payload: RegisterPayload) => Promise<Usuario>;
+  register: (payload: RegisterPayload) => Promise<User>;
   logout: () => void;
-  fetchCarreras: () => Promise<Carrera[]>;
+  fetchPrograms: () => Promise<Program[]>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function getClientSnapshot(): AuthSession | null {
-  return getSessionSnapshot();
-}
 
 function getServerSnapshot(): AuthSession | null {
   return null;
 }
 
 function useSessionSnapshot(): AuthSession | null {
-  return useSyncExternalStore(
-    subscribeSession,
-    getClientSnapshot,
-    getServerSnapshot,
-  );
+  return useSyncExternalStore(subscribeSession, getSessionSnapshot, getServerSnapshot);
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+function useLogout(): () => void {
   const router = useRouter();
-  const session = useSessionSnapshot();
-
-  const login = useCallback(async (payload: LoginPayload) => {
-    return authService.login(payload);
-  }, []);
-
-  const register = useCallback(async (payload: RegisterPayload) => {
-    return authService.register(payload);
-  }, []);
-
-  const logout = useCallback(() => {
+  return useCallback(() => {
     clearSession();
     router.push("/login");
   }, [router]);
+}
 
-  const fetchCarreras = useCallback(() => authService.fetchCarreras(), []);
+function loadPrograms(): Promise<Program[]> {
+  return fetchPrograms();
+}
+
+// La sesión vive en memoria: recargar la página obliga a iniciar sesión de nuevo (ver SECURITY.md).
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const session = useSessionSnapshot();
+  const logout = useLogout();
 
   const value = useMemo<AuthContextValue>(
     () => ({
       token: session?.token ?? null,
-      usuario: session?.usuario ?? null,
+      user: session?.user ?? null,
       isAuthenticated: hasSession(),
-      login,
-      register,
+      login: authService.login,
+      register: authService.register,
       logout,
-      fetchCarreras,
+      fetchPrograms: loadPrograms,
     }),
-    [session, login, register, logout, fetchCarreras],
+    [session, logout],
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * Reads the in-memory session. Works inside AuthProvider or standalone
- * (token lives in the session module, so SPA navigations keep it).
- */
 export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  const router = useRouter();
+  const context = useContext(AuthContext);
   const session = useSessionSnapshot();
+  const logout = useLogout();
 
-  const logout = useCallback(() => {
-    clearSession();
-    router.push("/login");
-  }, [router]);
-
-  if (ctx) return ctx;
+  if (context) return context;
 
   return {
     token: session?.token ?? null,
-    usuario: session?.usuario ?? null,
+    user: session?.user ?? null,
     isAuthenticated: hasSession(),
     login: authService.login,
     register: authService.register,
     logout,
-    fetchCarreras: authService.fetchCarreras,
+    fetchPrograms: loadPrograms,
   };
-}
-
-/** Logout helper usable outside React trees that already imported a navigate fn. */
-export function logoutAndRedirect(navigate: (path: string) => void): void {
-  clearSession();
-  navigate("/login");
 }

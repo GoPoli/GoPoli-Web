@@ -2,10 +2,7 @@
 
 import { useEffect } from "react";
 
-/**
- * Registra el service worker de shell (`/sw.js`) si existe.
- * No-op silencioso si el archivo no está o el registro falla.
- */
+// Registra el service worker del app shell si existe; si falla, la app sigue funcionando.
 export function PwaRegister() {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,7 +28,7 @@ export function PwaRegister() {
         if (!head.ok || cancelled) return;
         await navigator.serviceWorker.register("/sw.js");
       } catch {
-        // No-op: PWA opcional en desarrollo / sin SW.
+        return;
       }
     }
 

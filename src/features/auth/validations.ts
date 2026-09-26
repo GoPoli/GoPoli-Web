@@ -1,51 +1,43 @@
-/** Port of `frontend/lib/utils/validaciones.dart`. */
+const BASIC_EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const NAME_RE = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,120}$/;
+const PASSWORD_MAX_BYTES = 72;
+const PHONE_RE = /^[0-9]{8,14}$/;
 
-const EMAIL_BASICO =
-  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+export const INSTITUTIONAL_DOMAIN = "@elpoli.edu.co";
 
-const NOMBRE_RE = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,}$/;
-
-const TELEFONO_RE = /^[0-9]{8,14}$/;
-
-export function mensajeCorreo(correo: string): string | null {
-  const c = correo.trim();
-  if (c.length === 0) return "El correo es obligatorio";
-  if (!EMAIL_BASICO.test(c)) return "Ingresa un correo válido";
-  if (!c.toLowerCase().endsWith("@elpoli.edu.co")) {
-    return "Usa tu correo @elpoli.edu.co";
+export function emailError(email: string): string | null {
+  const value = email.trim();
+  if (value.length === 0) return "El correo es obligatorio";
+  if (!BASIC_EMAIL_RE.test(value)) return "Ingresa un correo válido";
+  if (!value.toLowerCase().endsWith(INSTITUTIONAL_DOMAIN)) {
+    return `Usa tu correo ${INSTITUTIONAL_DOMAIN}`;
   }
   return null;
 }
 
-export function mensajeContrasena(pass: string): string | null {
-  if (pass.length === 0) return "La contraseña es obligatoria";
-  if (pass.length < 8) return "Mínimo 8 caracteres";
+export function passwordError(password: string): string | null {
+  if (password.length === 0) return "La contraseña es obligatoria";
+  if (password.length < 8) return "Mínimo 8 caracteres";
+  if (new TextEncoder().encode(password).length > PASSWORD_MAX_BYTES) return "Máximo 72 caracteres";
   return null;
 }
 
-export function mensajeConfirmacion(
-  pass: string,
-  confirmacion: string,
-): string | null {
-  if (confirmacion.length === 0) return "Confirma tu contraseña";
-  if (pass !== confirmacion) return "Las contraseñas no coinciden";
+export function confirmationError(password: string, confirmation: string): string | null {
+  if (confirmation.length === 0) return "Confirma tu contraseña";
+  if (password !== confirmation) return "Las contraseñas no coinciden";
   return null;
 }
 
-export function mensajeNombre(nombre: string): string | null {
-  const n = nombre.trim();
-  if (n.length === 0) return "El nombre es obligatorio";
-  if (!NOMBRE_RE.test(n)) {
-    return "Solo letras y espacios (mín. 2 caracteres)";
-  }
+export function nameError(name: string): string | null {
+  const value = name.trim();
+  if (value.length === 0) return "El nombre es obligatorio";
+  if (!NAME_RE.test(value)) return "Solo letras y espacios (entre 3 y 120 caracteres)";
   return null;
 }
 
-export function mensajeTelefono(telefono: string): string | null {
-  const t = telefono.trim();
-  if (t.length === 0) return "El teléfono es obligatorio";
-  if (!TELEFONO_RE.test(t)) {
-    return "Entre 8 y 14 dígitos numéricos";
-  }
+export function phoneError(phone: string): string | null {
+  const value = phone.trim();
+  if (value.length === 0) return "El teléfono es obligatorio";
+  if (!PHONE_RE.test(value)) return "Entre 8 y 14 dígitos numéricos";
   return null;
 }

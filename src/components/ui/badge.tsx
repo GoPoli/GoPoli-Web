@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from "react";
 
-export type BadgeTone = "primary" | "conductor" | "warning" | "neutral";
+export type BadgeTone = "primary" | "driver" | "warning" | "neutral";
 
 export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   tone?: BadgeTone;
@@ -9,7 +9,7 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 const toneClass: Record<BadgeTone, string> = {
   primary:
     "border-[color-mix(in_srgb,var(--gopoli-primary,#1B5E20)_35%,transparent)] bg-[color-mix(in_srgb,var(--gopoli-primary,#1B5E20)_10%,transparent)] text-[var(--gopoli-primary,#1B5E20)]",
-  conductor:
+  driver:
     "border-[color-mix(in_srgb,#1565C0_35%,transparent)] bg-[color-mix(in_srgb,#1565C0_10%,transparent)] text-[#1565C0]",
   warning:
     "border-[var(--gopoli-accent,#FFC107)] bg-[color-mix(in_srgb,var(--gopoli-accent,#FFC107)_20%,transparent)] text-[var(--gopoli-primary,#1B5E20)]",
@@ -41,21 +41,20 @@ export function Badge({
 
 export type TripTypeBadgeProps = {
   tripTypeLabel?: string | null;
-  idTipoServicio?: number | string | null;
+  tripTypeId?: number | string | null;
   className?: string;
 };
 
-/** Equivalente a Flutter `TripTypeBadge`. */
 export function TripTypeBadge({
   tripTypeLabel,
-  idTipoServicio,
+  tripTypeId,
   className = "",
 }: TripTypeBadgeProps) {
   const id =
-    typeof idTipoServicio === "number"
-      ? idTipoServicio
-      : idTipoServicio != null
-        ? Number.parseInt(String(idTipoServicio), 10)
+    typeof tripTypeId === "number"
+      ? tripTypeId
+      : tripTypeId != null
+        ? Number.parseInt(String(tripTypeId), 10)
         : NaN;
 
   const label =
@@ -65,24 +64,23 @@ export function TripTypeBadge({
         ? "Grupo conductor"
         : "Grupo de viaje";
 
-  const isConductor =
-    id === 3 || label.toLowerCase().includes("conductor");
+  const isDriverTrip =
+    id === 3 || label.toLowerCase().includes("driver");
 
   return (
-    <Badge tone={isConductor ? "conductor" : "primary"} className={className}>
+    <Badge tone={isDriverTrip ? "driver" : "primary"} className={className}>
       {label}
     </Badge>
   );
 }
 
 export type RatingBadgeProps = {
-  nota?: number | null;
+  rating?: number | null;
   className?: string;
 };
 
-/** Equivalente a Flutter `RatingBadge`. */
-export function RatingBadge({ nota, className = "" }: RatingBadgeProps) {
-  const valor = nota ?? 0;
+export function RatingBadge({ rating, className = "" }: RatingBadgeProps) {
+  const value = rating ?? 0;
   return (
     <span
       className={[
@@ -101,7 +99,7 @@ export function RatingBadge({ nota, className = "" }: RatingBadgeProps) {
         <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
       </svg>
       <span className="text-sm font-bold text-[var(--gopoli-primary,#1B5E20)]">
-        {valor.toFixed(1)}
+        {value.toFixed(1)}
       </span>
     </span>
   );

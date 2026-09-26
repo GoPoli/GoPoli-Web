@@ -1,82 +1,39 @@
-import { ApiException, authRequest, getApiBaseUrl } from "./http";
+import { ApiError, apiRequest } from "@/lib/api/client";
 import { setSession } from "./session";
 import {
-  parseCarrera,
   parseLoginResponse,
-  parseUsuario,
-  type Carrera,
+  parseUser,
   type LoginPayload,
   type LoginResponse,
   type RegisterPayload,
-  type Usuario,
+  type User,
 } from "./types";
 
-/** POST /register — mirrors Flutter `AuthService.registrar`. */
-export async function register(payload: RegisterPayload): Promise<Usuario> {
-  try {
-    const json = await authRequest<unknown>("/register", {
-      method: "POST",
-      withAuth: false,
-      body: {
-        correo: payload.correo.trim(),
-        contrasena: payload.contrasena,
-        nombre: payload.nombre.trim(),
-        tel: payload.tel.trim(),
-        idCarrera: payload.idCarrera,
-      },
-    });
-    return parseUsuario(json);
-  } catch (err) {
-    if (err instanceof ApiException) throw err;
-    throw new ApiException(
-      `No se pudo conectar con el servidor (${getApiBaseUrl()})`,
-    );
-  }
+export async function register(payload: RegisterPayload): Promise<User> {
+  const json = await apiRequest("/register", {
+    method: "POST",
+    auth: false,
+    body: {
+      email: payload.email.trim(),
+      password: payload.password,
+      name: payload.name.trim(),
+      phone: payload.phone.trim(),
+      programId: payload.programId,
+    },
+  });
+  return parseUser(json);
 }
 
-/** POST /login — mirrors Flutter `AuthService.login` + SessionManager.iniciarSesion. */
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  try {
-    const json = await authRequest<unknown>("/login", {
-      method: "POST",
-      withAuth: false,
-      body: {
-        correo: payload.correo.trim(),
-        contrasena: payload.contrasena,
-      },
-    });
-    const loginResponse = parseLoginResponse(json);
-    if (!loginResponse.token) {
-      throw new ApiException("Respuesta de login sin token");
-    }
-    setSession({
-      token: loginResponse.token,
-      usuario: loginResponse.usuario,
-    });
-    return loginResponse;
-  } catch (err) {
-    if (err instanceof ApiException) throw err;
-    throw new ApiException(
-      `No se pudo conectar con el servidor (${getApiBaseUrl()})`,
-    );
+  const json = await apiRequest("/login", {
+    method: "POST",
+    auth: false,
+    body: { email: payload.email.trim(), password: payload.password },
+  });
+  const response = parseLoginResponse(json);
+  if (!response.token) {
+    throw new ApiError("Respuesta de inicio de sesión sin token");
   }
-}
-
-/** GET /carreras — used by registro (same as Flutter CatalogoService). */
-export async function fetchCarreras(): Promise<Carrera[]> {
-  try {
-    const json = await authRequest<unknown>("/carreras", {
-      method: "GET",
-      withAuth: false,
-    });
-    if (!Array.isArray(json)) {
-      throw new ApiException("Respuesta de carreras inválida");
-    }
-    return json.map(parseCarrera);
-  } catch (err) {
-    if (err instanceof ApiException) throw err;
-    throw new ApiException(
-      `No se pudo conectar con el servidor (${getApiBaseUrl()})`,
-    );
-  }
+  setSession({ token: response.token, user: response.user });
+  return response;
 }

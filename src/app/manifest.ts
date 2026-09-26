@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 
-/** Manifest PWA — colores alineados con Flutter `AppColors.verdePrimario`. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "GoPoli",

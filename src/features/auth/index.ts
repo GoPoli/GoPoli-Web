@@ -1,35 +1,20 @@
-export { AuthProvider, useAuth, logoutAndRedirect } from "./auth-context";
+export { AuthProvider, useAuth } from "./auth-context";
 export type { AuthContextValue } from "./auth-context";
-export {
-  login,
-  register,
-  fetchCarreras,
-} from "./auth-service";
+export { login, register } from "./auth-service";
 export {
   getAccessToken,
   getSessionUser,
+  getSessionUserId,
   getSessionSnapshot,
   hasSession,
+  isSessionDriver,
   setSession,
+  updateSessionUser,
   clearSession,
   subscribeSession,
 } from "./session";
 export type { AuthSession } from "./session";
-export { ApiException, authRequest, getApiBaseUrl } from "./http";
-export type { AuthHttpOptions } from "./http";
 export { LoginForm } from "./LoginForm";
-export { RegistroForm } from "./RegistroForm";
-export type {
-  Usuario,
-  LoginResponse,
-  Carrera,
-  LoginPayload,
-  RegisterPayload,
-} from "./types";
-export {
-  mensajeCorreo,
-  mensajeContrasena,
-  mensajeConfirmacion,
-  mensajeNombre,
-  mensajeTelefono,
-} from "./validations";
+export { SignupForm } from "./SignupForm";
+export type { User, Vehicle, LoginResponse, LoginPayload, RegisterPayload } from "./types";
+export { confirmationError, emailError, nameError, passwordError, phoneError } from "./validations";

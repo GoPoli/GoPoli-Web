@@ -3,15 +3,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-/**
- * Estados de UI del trayecto, derivados de datos reales (sin matching inventado):
- * - empty: sin destino / sin servicio
- * - planning: ruta o formulario listos (oferta a confirmar)
- * - active_group: idServicioActivo sin en-curso
- * - in_progress: idServicioEnCurso
- * - route_error: aviso de coordenadas / ruta
- * - no_results: búsqueda sin ubicaciones
- */
 export type TripUiKind =
   | "empty"
   | "planning"
@@ -22,7 +13,7 @@ export type TripUiKind =
 
 export type TripStatusBannerProps = {
   kind: TripUiKind;
-  serviceId?: number | null;
+  tripId?: number | null;
   message?: string | null;
   onShowRoute?: () => void;
   onDismissError?: () => void;
@@ -62,10 +53,9 @@ function BannerShell({
   );
 }
 
-/** Banners de estado del viaje sobre el mapa (compound por kind, no booleanas). */
 export function TripStatusBanner({
   kind,
-  serviceId,
+  tripId,
   message,
   onShowRoute,
   onDismissError,
@@ -104,7 +94,7 @@ export function TripStatusBanner({
     );
   }
 
-  if (kind === "in_progress" && serviceId != null) {
+  if (kind === "in_progress" && tripId != null) {
     return (
       <BannerShell tone="pine" className={className}>
         <button
@@ -119,7 +109,7 @@ export function TripStatusBanner({
           <span className="flex-1">En viaje — ruta en el mapa</span>
         </button>
         <Link
-          href={`/grupo/${serviceId}`}
+          href={`/groups/${tripId}`}
           className="flex min-h-11 min-w-11 items-center justify-center px-3 text-sm font-medium hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80"
           aria-label="Ver grupo y acciones"
         >
@@ -129,11 +119,11 @@ export function TripStatusBanner({
     );
   }
 
-  if (kind === "active_group" && serviceId != null) {
+  if (kind === "active_group" && tripId != null) {
     return (
       <BannerShell tone="primary" className={className}>
         <Link
-          href={`/grupo/${serviceId}`}
+          href={`/groups/${tripId}`}
           className="flex min-h-11 flex-1 items-center gap-2.5 px-3.5 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80"
         >
           <span className="flex-1">Grupo activo — ver mi grupo</span>
@@ -151,7 +141,6 @@ export type TripSheetSummaryProps = {
   subtitle?: string;
   capacityLabel?: string | null;
   timeLabel?: string | null;
-  /** Ámbar solo si hay dato real de decisión (no inventar precio). */
   signalLabel?: string | null;
 };
 
