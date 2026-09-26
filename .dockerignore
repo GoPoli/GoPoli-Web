@@ -8,6 +8,7 @@ docs
 .env
 .env.*
 npm-debug.log*
+pnpm-debug.log*
 .vscode
 .idea
 Dockerfile

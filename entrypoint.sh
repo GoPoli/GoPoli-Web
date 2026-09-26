@@ -2,20 +2,23 @@
 set -e
 
 APP_DIR="/app"
+SOURCE_DIR="$APP_DIR/.next-build"
 BUILD_DIR="$APP_DIR/.next"
 ENVMAP_FILE="$APP_DIR/runtime.envmap"
 
-echo "Starting runtime variable replacement..."
+if [ ! -d "$SOURCE_DIR" ]; then
+  echo "No se encontró la compilación en $SOURCE_DIR"
+  exit 1
+fi
 
 if [ ! -f "$ENVMAP_FILE" ]; then
-  echo "Envmap file not found at $ENVMAP_FILE"
+  echo "No se encontró el mapa de variables en $ENVMAP_FILE"
   exit 1
 fi
 
-if [ ! -d "$BUILD_DIR" ]; then
-  echo "Build directory not found at $BUILD_DIR"
-  exit 1
-fi
+echo "Preparando la compilación para este entorno..."
+rm -rf "${BUILD_DIR:?}/"*
+cp -R "$SOURCE_DIR/." "$BUILD_DIR/"
 
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
@@ -30,13 +33,14 @@ while IFS= read -r line || [ -n "$line" ]; do
   value="$(printenv "$env_name" || true)"
   if [ -z "$value" ]; then
     value="$default_value"
+    echo "  $env_name no está definida; se usa el valor por defecto"
   fi
 
   escaped_value="$(printf '%s' "$value" | sed -e 's/[\\|&]/\\&/g')"
   files="$(grep -rlF "$placeholder" "$BUILD_DIR" 2>/dev/null || true)"
 
   if [ -z "$files" ]; then
-    echo "  $env_name: no files contain $placeholder"
+    echo "  $env_name: ningún archivo contiene $placeholder"
     continue
   fi
 
@@ -46,6 +50,6 @@ while IFS= read -r line || [ -n "$line" ]; do
   done
 done < "$ENVMAP_FILE"
 
-echo "Environment variable replacement completed."
+echo "Variables de entorno aplicadas. Iniciando GoPoli Web..."
 
 exec "$@"
