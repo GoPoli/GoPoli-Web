@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/features/auth/validations.test.mts src/features/profile/payload.test.mts"
+    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/features/auth/validations.test.mts src/features/profile/payload.test.mts src/components/layout/shell-title.test.mts"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
