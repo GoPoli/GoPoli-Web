@@ -13,6 +13,7 @@ import {
   IconRoute,
   IconSearch,
 } from "@/components/ui/icons";
+import { isWithin, shellTitle } from "@/components/layout/shell-title";
 import { useAuth } from "@/features/auth/auth-context";
 
 export type AppShellNavItem = {
@@ -61,19 +62,15 @@ export const APP_SHELL_NAV: readonly AppShellNavItem[] = [
   },
 ] as const;
 
+/** Pantallas fuera del menú con título propio: sin él, la barra repetiría la marca junto al logo. */
+const SCREEN_TITLES = [{ href: "/groups", title: "Grupo" }] as const;
+
+const SHELL_SECTIONS = [...APP_SHELL_NAV, ...SCREEN_TITLES];
+
 export type AppShellProps = {
   children: ReactNode;
   isAuthenticated?: boolean;
 };
-
-function navIsActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function currentTitle(pathname: string): string {
-  const match = APP_SHELL_NAV.find((item) => navIsActive(pathname, item.href));
-  return match?.title ?? "GoPoli";
-}
 
 export function AppShell({
   children,
@@ -83,7 +80,7 @@ export function AppShell({
   const isMap = pathname === "/map";
   const isChatThread = /^\/messages\/[^/]+$/.test(pathname);
   const fitsViewport = isMap || isChatThread;
-  const title = currentTitle(pathname);
+  const title = shellTitle(pathname, SHELL_SECTIONS);
   const { isAuthenticated: sessionAuth } = useAuth();
   const isAuthenticated = isAuthenticatedProp ?? sessionAuth;
 
@@ -111,7 +108,7 @@ export function AppShell({
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-2.5">
           {APP_SHELL_NAV.map((item) => {
-            const active = navIsActive(pathname, item.href);
+            const active = isWithin(pathname, item.href);
             const Icon = item.icon;
             return (
               <Link
@@ -180,11 +177,17 @@ export function AppShell({
               />
             </Link>
             {!isMap ? (
-              <h1 className="truncate text-base font-semibold md:text-lg">
-                {title}
+              <h1
+                className={[
+                  "truncate text-base font-semibold md:text-lg",
+                  // Sin título de sección, en el teléfono el logo ya dice GoPoli.
+                  title ? "" : "sr-only md:not-sr-only",
+                ].join(" ")}
+              >
+                {title ?? "GoPoli"}
               </h1>
             ) : (
-              <h1 className="sr-only">{title}</h1>
+              <h1 className="sr-only">{title ?? "GoPoli"}</h1>
             )}
             {isMap ? (
               <p className="hidden truncate text-sm text-white/80 md:block">
@@ -222,7 +225,7 @@ export function AppShell({
         >
           <ul className="flex">
             {APP_SHELL_NAV.map((item) => {
-              const active = navIsActive(pathname, item.href);
+              const active = isWithin(pathname, item.href);
               const Icon = item.icon;
               return (
                 <li key={item.href} className="min-w-0 flex-1">
